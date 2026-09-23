@@ -14,6 +14,7 @@ export interface PlayerProfile {
   id: string
   display_name: string
   avatar_url: string | null
+  is_public: boolean
   company_id: string | null
   created_at: string
 }

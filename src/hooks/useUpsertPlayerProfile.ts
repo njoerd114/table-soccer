@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 export type UpsertPlayerProfileInput = {
   readonly display_name: string
   readonly avatar_url: string | null
+  readonly is_public?: boolean
   readonly company_id?: string | null
 }
 
@@ -68,15 +69,16 @@ async function upsertPlayerProfile(
     throw new MissingProfileUserError()
   }
 
-  const baseRow: UpsertPlayerProfileRow = {
+  const baseRow = {
     id: user.id,
     display_name: input.display_name,
     avatar_url: input.avatar_url
   }
-  const row: UpsertPlayerProfileRow =
-    input.company_id === undefined
-      ? baseRow
-      : { ...baseRow, company_id: input.company_id }
+  const row: UpsertPlayerProfileRow = {
+    ...baseRow,
+    ...(input.is_public === undefined ? {} : { is_public: input.is_public }),
+    ...(input.company_id === undefined ? {} : { company_id: input.company_id })
+  }
 
   rejectForbiddenProfileRowKeys(row)
 
@@ -94,7 +96,10 @@ function rejectForbiddenProfileInputKeys(
 ): void {
   const forbiddenKeys = Object.keys(input).filter(
     (key) =>
-      key !== 'display_name' && key !== 'avatar_url' && key !== 'company_id'
+      key !== 'display_name' &&
+      key !== 'avatar_url' &&
+      key !== 'is_public' &&
+      key !== 'company_id'
   )
 
   if (forbiddenKeys.length > 0) {
@@ -108,6 +113,7 @@ function rejectForbiddenProfileRowKeys(row: UpsertPlayerProfileRow): void {
       key !== 'id' &&
       key !== 'display_name' &&
       key !== 'avatar_url' &&
+      key !== 'is_public' &&
       key !== 'company_id'
   )
 

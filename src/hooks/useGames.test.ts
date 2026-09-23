@@ -50,6 +50,7 @@ describe('useGames', () => {
       id,
       display_name: id.toUpperCase(),
       avatar_url: null,
+      is_public: false,
       company_id: null,
       created_at: '2026-01-01T00:00:00Z'
     }))
@@ -108,6 +109,7 @@ describe('useGames', () => {
       id,
       display_name: id.toUpperCase(),
       avatar_url: null,
+      is_public: false,
       company_id: 'company-1',
       created_at: '2026-01-01T00:00:00Z'
     }))

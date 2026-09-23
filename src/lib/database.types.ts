@@ -82,6 +82,7 @@ export type PlayerRow = {
   readonly id: string
   readonly display_name: string
   readonly avatar_url: string | null
+  readonly is_public: boolean
   readonly company_id: string | null
   readonly created_at: string
 }
@@ -90,6 +91,7 @@ export type PlayerInsertRow = {
   readonly id?: string
   readonly display_name: string
   readonly avatar_url?: string | null
+  readonly is_public?: boolean
   readonly company_id?: string | null
   readonly created_at?: string
 }
