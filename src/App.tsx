@@ -1,17 +1,21 @@
 import { lazy, Suspense, useState } from 'react'
-import { AppBar, Avatar, Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, Fab, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
+import { AppBar, Avatar, Box, Button, ButtonGroup, CircularProgress, Dialog, DialogContent, DialogTitle, Fab, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import CompanySwitcher from './components/CompanySwitcher'
 import LoginForm from './components/LoginForm'
 import { ActiveCompanyProvider } from './context/ActiveCompanyContext'
 import { useAuth } from './hooks/useAuth'
+import { useActiveCompany } from './hooks/useActiveCompany'
+import { useCompanyMembers } from './hooks/useCompanies'
 import { useGameSubscriptions } from './hooks/useGameSubscriptions'
 import { useIsSuperAdmin } from './hooks/useSuperAdmin'
+import { supportedLanguages } from './i18n'
 
 const Games = lazy(() => import('./pages/Games'))
+const Landing = lazy(() => import('./pages/Landing'))
 const Teams = lazy(() => import('./pages/Teams'))
 const Players = lazy(() => import('./pages/Players'))
 const Player = lazy(() => import('./pages/Player'))
@@ -19,6 +23,7 @@ const GameDetail = lazy(() => import('./pages/GameDetail'))
 const NewGame = lazy(() => import('./pages/NewGame'))
 const Comparinator = lazy(() => import('./pages/Comparinator'))
 const Seasons = lazy(() => import('./pages/Seasons'))
+const SeasonDetail = lazy(() => import('./pages/SeasonDetail'))
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'))
 const Impressum = lazy(() => import('./pages/Impressum'))
 const Datenschutz = lazy(() => import('./pages/Datenschutz'))
@@ -31,6 +36,12 @@ function PageLoader() {
       <CircularProgress />
     </Box>
   )
+}
+
+/** Landing page for signed-out visitors, Games list for signed-in users. */
+function Root() {
+  const { user } = useAuth()
+  return user ? <Games /> : <Landing />
 }
 
 export default function App() {
@@ -50,7 +61,7 @@ export default function App() {
     <ActiveCompanyProvider>
       <AppShell>
         <Routes>
-          <Route path="/" element={<Suspense fallback={<PageLoader />}><Games /></Suspense>} />
+          <Route path="/" element={<Suspense fallback={<PageLoader />}><Root /></Suspense>} />
           <Route path="/games" element={<Suspense fallback={<PageLoader />}><Games /></Suspense>} />
           <Route path="/teams" element={<Suspense fallback={<PageLoader />}><Teams /></Suspense>} />
           <Route path="/players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
@@ -59,6 +70,7 @@ export default function App() {
           <Route path="/new" element={<Suspense fallback={<PageLoader />}><NewGame /></Suspense>} />
           <Route path="/compare/:p1/:p2" element={<Suspense fallback={<PageLoader />}><Comparinator /></Suspense>} />
           <Route path="/seasons" element={<Suspense fallback={<PageLoader />}><Seasons /></Suspense>} />
+          <Route path="/seasons/:id" element={<Suspense fallback={<PageLoader />}><SeasonDetail /></Suspense>} />
           <Route path="/admin" element={<Suspense fallback={<PageLoader />}><SuperAdmin /></Suspense>} />
           <Route path="/impressum" element={<Suspense fallback={<PageLoader />}><Impressum /></Suspense>} />
           <Route path="/datenschutz" element={<Suspense fallback={<PageLoader />}><Datenschutz /></Suspense>} />
@@ -74,6 +86,10 @@ function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const { data: isSuperAdmin } = useIsSuperAdmin()
+  const { company } = useActiveCompany()
+  const { data: members } = useCompanyMembers(company?.id ?? '')
+  const myRole = members?.find((m) => m.user_id === user?.id)?.role
+  const showAdminLink = isSuperAdmin || myRole === 'owner' || myRole === 'admin'
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [loginOpen, setLoginOpen] = useState(false)
 
@@ -101,11 +117,13 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink to="/seasons" style={navLinkStyle}>
             {t('nav.seasons')}
           </NavLink>
-          {isSuperAdmin && (
+          {showAdminLink && (
             <NavLink to="/admin" style={navLinkStyle}>
               {t('nav.admin')}
             </NavLink>
           )}
+
+          <LanguageSwitcher />
 
           {user ? (
             <>
@@ -172,12 +190,34 @@ function Footer() {
   )
 }
 
+function LanguageSwitcher() {
+  const { i18n } = useTranslation()
+
+  return (
+    <ButtonGroup size="small" variant="outlined" color="inherit" sx={{ mr: 2 }}>
+      {supportedLanguages.map((lang) => (
+        <Button
+          key={lang}
+          onClick={() => void i18n.changeLanguage(lang)}
+          variant={i18n.resolvedLanguage === lang ? 'contained' : 'outlined'}
+        >
+          {lang.toUpperCase()}
+        </Button>
+      ))}
+    </ButtonGroup>
+  )
+}
+
+const GAMES_FAB_ROUTES = ['/', '/games']
+
 function NewGameFab() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
 
   if (!user) return null
+  if (!GAMES_FAB_ROUTES.includes(location.pathname)) return null
 
   return (
     <Fab

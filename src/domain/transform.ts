@@ -405,6 +405,7 @@ export function transform(raw: TransformInput): AppData {
       startdate: new Date(gameRecord.startdate),
       duration: gameRecord.duration,
       timeline,
+      annotations: gameRecord.annotations ?? [],
       winnerScore:
         winnerAttackScore +
         winnerDefenseScore +
@@ -736,6 +737,7 @@ function normalizeLegacyPlayer(player: LegacyPlayer, id: string): PlayerProfile 
     id: player.id || id,
     display_name: player.display_name ?? player.name ?? player.id ?? id,
     avatar_url: player.avatar_url ?? player.photoURL ?? null,
+    is_public: false,
     company_id: null,
     created_at: player.created_at ?? ''
   }

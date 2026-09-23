@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import type { TimelineEvent } from '../domain/types'
+import type { GameAnnotation, TimelineEvent } from '../domain/types'
 import type { GameInsertRow } from '../lib/database.types'
 import { queryKeys } from '../lib/queryKeys'
 import { supabase } from '../lib/supabase'
@@ -10,6 +10,7 @@ export type CreateGameInput = {
   readonly scores: [number, number, number, number, number, number, number, number]
   readonly duration: number
   readonly timeline: TimelineEvent[]
+  readonly annotations?: GameAnnotation[]
   readonly company_id: string
   readonly opponent_company_id?: string | null
   readonly season_id?: string | null
@@ -59,6 +60,7 @@ async function createGame(input: CreateGameInput): Promise<void> {
     players: input.players,
     scores: input.scores,
     timeline: input.timeline,
+    annotations: input.annotations ?? [],
     company_id: input.company_id,
     opponent_company_id: input.opponent_company_id ?? null,
     season_id: input.season_id ?? null,

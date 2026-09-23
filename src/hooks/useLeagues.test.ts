@@ -50,6 +50,7 @@ describe('useLeagues', () => {
         id: 'league-1',
         company_id: 'company-1',
         name: 'Bundesliga',
+        game_mode: 'classic',
         created_by: 'auth-user-1'
       }
     ]

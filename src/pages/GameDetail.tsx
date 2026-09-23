@@ -96,7 +96,7 @@ export default function GameDetail() {
       </Typography>
       <List dense>
         {game.timeline.map((entry, i) => (
-          <ListItem key={`${entry.time}-${i}`} disableGutters>
+          <ListItem key={`goal-${entry.time}-${i}`} disableGutters>
             <ListItemText
               primary={
                 <>
@@ -107,6 +107,21 @@ export default function GameDetail() {
                 </>
               }
               secondary={`${entry.time}s · ${t('game.score')} ${entry.score[0]} : ${entry.score[1]}`}
+            />
+          </ListItem>
+        ))}
+        {game.annotations.map((annotation, i) => (
+          <ListItem key={`annotation-${annotation.time}-${i}`} disableGutters>
+            <ListItemText
+              primary={
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  color={annotation.team === 1 ? 'primary' : 'secondary'}
+                  label={`${t('common.team')} ${annotation.team} · ${t(`game.${annotation.type === 'ball_out' ? 'ballOut' : 'cornerBall'}`)}`}
+                />
+              }
+              secondary={`${annotation.time}s`}
             />
           </ListItem>
         ))}

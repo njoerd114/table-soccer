@@ -108,6 +108,7 @@ describe('transform', () => {
         id: player.id,
         display_name: player.name,
         avatar_url: null,
+        is_public: false,
         company_id: null,
         created_at: ''
       })
@@ -145,6 +146,7 @@ describe('transform', () => {
       id,
       display_name: id,
       avatar_url: null,
+      is_public: false,
       company_id: null,
       created_at: ''
     }))

@@ -37,7 +37,14 @@
     },
     "opponentCompany": "Gegner-Firma",
     "sameCompany": "Eigene Firma",
-    "handicapAllowance": "Handicap-Ausgleich: Team {{team}} startet mit +{{goals}} Toren"
+    "handicapAllowance": "Handicap-Ausgleich: Team {{team}} startet mit +{{goals}} Toren",
+    "ballOut": "Ball raus",
+    "cornerBall": "Eckball",
+    "hint": {
+      "serve": "Ball geht an Team {{team}}",
+      "ballOut": "Team {{team}} bringt den Ball wieder ins Spiel",
+      "cornerBall": "Eckball für Team {{team}} – von der Ecke einwerfen"
+    }
   },
   "position": {
     "KEEPER": "Torwart",
@@ -99,6 +106,12 @@
     "rename": "Umbenennen",
     "members": "Mitglieder",
     "promoteToAdmin": "Zum Admin befördern",
+    "gameModeLabel": "Spielmodus",
+    "gameModeHint": "Kann nach dem Anlegen nicht mehr geändert werden.",
+    "gameMode": {
+      "classic": "Klassisch",
+      "advanced": "Erweitert"
+    },
     "role": {
       "owner": "Inhaber",
       "admin": "Admin",
@@ -107,7 +120,11 @@
   },
   "profile": {
     "create": "Spielerprofil erstellen",
-    "displayName": "Anzeigename"
+    "displayName": "Anzeigename",
+    "enablePublicProfileFromGoogleAvatar": "Profilbild von Google übernehmen und Profil für andere Firmen sichtbar machen",
+    "settingsButton": "Profil-Einstellungen",
+    "settingsTitle": "Profil-Einstellungen",
+    "settingsHint": "Wenn aktiviert, wird dein Google-Profilbild übernommen und dein Profil ist firmenübergreifend sichtbar."
   },
   "filter": {
     "allSeasons": "Alle Saisons",
@@ -121,5 +138,16 @@
     "impressum": "Impressum",
     "datenschutz": "Datenschutz",
     "license": "Lizenz: MIT + Commons Clause + Attribution"
+  },
+  "landing": {
+    "heroTitle": "Tischfußball Spiele tracken",
+    "heroSubtitle": "Schach-Style ELO-Rating, Live-Scoring, Saisons, Ligen und Ranglisten – für deine ganze Firma.",
+    "getStarted": "Loslegen",
+    "featureElo": "ELO-Rating",
+    "featureEloText": "Schach-Style Rating pro Spieler und Position.",
+    "featureLive": "Live-Scoring",
+    "featureLiveText": "Tore live tracken, Position für Position.",
+    "featureTeams": "Saisons & Ligen",
+    "featureTeamsText": "Wettbewerbe für die ganze Firma organisieren."
   }
 }

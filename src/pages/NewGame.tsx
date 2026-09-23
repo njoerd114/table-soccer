@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Chip, CircularProgress, Grid, MenuItem, Paper, Switch, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Grid, MenuItem, Paper, Switch, TextField, Typography } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -21,7 +21,7 @@ import {
 import { getScore } from '../domain/elo'
 import type { Scores8 } from '../domain/elo'
 import { computeHandicaps, matchAllowance } from '../domain/handicap'
-import type { GameRecord, TimelineEvent } from '../domain/types'
+import type { GameAnnotation, GameAnnotationType, GameRecord, TimelineEvent } from '../domain/types'
 import { useActiveCompany } from '../hooks/useActiveCompany'
 import { useAuth } from '../hooks/useAuth'
 import { useCompanies } from '../hooks/useCompanies'
@@ -82,8 +82,10 @@ export default function NewGame() {
   const [leagueId, setLeagueId] = useState<string | null>(null)
   const [scores, setScores] = useState<Scores8>(initialScores)
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
+  const [annotations, setAnnotations] = useState<GameAnnotation[]>([])
   const [startdate, setStartdate] = useState<number>(0)
   const [ownGoalMode, setOwnGoalMode] = useState(false)
+  const [hint, setHint] = useState<{ kind: 'serve' | 'ballOut' | 'cornerBall'; team: 1 | 2 } | null>(null)
 
   if (!user) {
     return (
@@ -147,6 +149,17 @@ export default function NewGame() {
       }
       return next
     })
+
+    const scoringTeam = slotIndex < 2 ? 1 : 2
+    const servingTeam = ownGoalMode ? scoringTeam : (scoringTeam === 1 ? 2 : 1)
+    setHint({ kind: 'serve', team: servingTeam })
+  }
+
+  const addAnnotation = (team: 1 | 2, type: GameAnnotationType) => {
+    // oxlint-disable-next-line react/purity -- Date.now() only in click handlers
+    const time = Math.floor((Date.now() - startdate) / 1000)
+    setAnnotations((current) => [...current, { team, type, time }])
+    setHint({ kind: type === 'ball_out' ? 'ballOut' : 'cornerBall', team })
   }
 
   const undoLastGoal = () => {
@@ -179,6 +192,7 @@ export default function NewGame() {
         // oxlint-disable-next-line react/purity -- Date.now() only in click handlers
         duration: Math.floor((Date.now() - startdate) / 1000),
         timeline,
+        annotations,
         company_id: company.id,
         opponent_company_id: opponentCompanyId,
         season_id: seasonId,
@@ -232,6 +246,8 @@ export default function NewGame() {
   }
 
   const allSlotsFilled = playerIds.every((id) => id !== undefined)
+  const selectedLeague = leagues?.find((l) => l.id === leagueId)
+  const isAdvancedMode = selectedLeague?.game_mode === 'advanced'
 
   if (profilesLoading) {
     return (
@@ -359,6 +375,12 @@ export default function NewGame() {
           <Switch checked={ownGoalMode} onChange={(e) => setOwnGoalMode(e.target.checked)} />
         </Box>
 
+        {hint && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {t(`game.hint.${hint.kind}`, { team: hint.team })}
+          </Alert>
+        )}
+
         <Grid container spacing={2} sx={{ mb: 3 }}>
           {SLOTS.map((slot) => {
             const color = slot.team === 1 ? TEAM1_COLOR : TEAM2_COLOR
@@ -385,6 +407,23 @@ export default function NewGame() {
             )
           })}
         </Grid>
+
+        {isAdvancedMode && (
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {([1, 2] as const).map((team) => (
+              <Grid size={{ xs: 6 }} key={team}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button size="small" variant="text" fullWidth onClick={() => addAnnotation(team, 'ball_out')}>
+                    {t('game.ballOut')}
+                  </Button>
+                  <Button size="small" variant="text" fullWidth onClick={() => addAnnotation(team, 'corner_ball')}>
+                    {t('game.cornerBall')}
+                  </Button>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        )}
 
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
           <Button variant="outlined" onClick={undoLastGoal} disabled={timeline.length === 0}>
@@ -452,15 +491,24 @@ function CreatePlayerProfile() {
   const { user } = useAuth()
   const { company } = useActiveCompany()
   const upsertProfile = useUpsertPlayerProfile()
+  const [allowPublicProfile, setAllowPublicProfile] = useState(false)
   const [displayName, setDisplayName] = useState(
     typeof user?.user_metadata.full_name === 'string' ? user.user_metadata.full_name : ''
   )
 
   const submit = () => {
     if (!displayName.trim()) return
+
+    const metadataAvatar = user?.user_metadata.avatar_url
+    const avatarUrl =
+      allowPublicProfile && typeof metadataAvatar === 'string'
+        ? metadataAvatar
+        : null
+
     upsertProfile.mutate({
       display_name: displayName.trim(),
-      avatar_url: null,
+      avatar_url: avatarUrl,
+      is_public: allowPublicProfile,
       company_id: company?.id ?? null
     })
   }
@@ -477,6 +525,16 @@ function CreatePlayerProfile() {
         fullWidth
         autoFocus
         sx={{ mb: 2 }}
+      />
+      <FormControlLabel
+        sx={{ mb: 2 }}
+        control={
+          <Checkbox
+            checked={allowPublicProfile}
+            onChange={(event) => setAllowPublicProfile(event.target.checked)}
+          />
+        }
+        label={t('profile.enablePublicProfileFromGoogleAvatar')}
       />
       {upsertProfile.error && <Alert severity="error" sx={{ mb: 2 }}>{t('error.generic')}</Alert>}
       <Button

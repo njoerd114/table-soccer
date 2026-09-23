@@ -1,8 +1,10 @@
-import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, TextField, Typography } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Fab, List, ListItem, ListItemButton, ListItemText, MenuItem, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 
-import type { CompanyMember } from '../domain/types'
+import type { CompanyMember, GameMode } from '../domain/types'
 import { useActiveCompany } from '../hooks/useActiveCompany'
 import { useAuth } from '../hooks/useAuth'
 import { useCompanyMembers, useRenameCompany, useUpdateMemberRole } from '../hooks/useCompanies'
@@ -12,10 +14,16 @@ import { useCreateSeason, useSeasons } from '../hooks/useSeasons'
 
 export default function Seasons() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { company } = useActiveCompany()
+  const { user } = useAuth()
 
+  const { data: members } = useCompanyMembers(company?.id ?? '')
   const { data: seasons, isLoading: seasonsLoading, error: seasonsError } = useSeasons(company?.id ?? '')
   const { data: leagues, isLoading: leaguesLoading, error: leaguesError } = useLeagues(company?.id ?? '')
+
+  const role = members?.find((member) => member.user_id === user?.id)?.role
+  const canManage = role === 'owner' || role === 'admin'
 
   if (!company) {
     return <Alert severity="info" sx={{ m: 2 }}>{t('company.onboarding')}</Alert>
@@ -25,26 +33,29 @@ export default function Seasons() {
     <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
       <CompanyHeader companyId={company.id} companyName={company.name} />
 
-      <SeasonForm companyId={company.id} />
+      <SeasonForm companyId={company.id} canManage={canManage} />
       <Box sx={{ mb: 3 }}>
         {seasonsLoading ? null : seasonsError ? <Alert severity="error">{t('error.loadFailed')}</Alert> : null}
         <List dense>
           {(seasons ?? []).map((season) => (
-            <ListItem key={season.id} disableGutters>
-              <ListItemText
-                primary={season.name}
-                secondary={`${season.starts_on}${season.ends_on ? ` → ${season.ends_on}` : ' → …'}`}
-              />
+            <ListItem key={season.id} disablePadding>
+              <ListItemButton onClick={() => navigate(`/seasons/${season.id}`)}>
+                <ListItemText
+                  primary={season.name}
+                  secondary={`${season.starts_on}${season.ends_on ? ` → ${season.ends_on}` : ' → …'}`}
+                />
+              </ListItemButton>
             </ListItem>
           ))}
         </List>
       </Box>
 
-      <LeagueForm companyId={company.id} />
+      <LeagueForm companyId={company.id} canManage={canManage} />
       <List dense>
         {(leagues ?? []).map((league) => (
           <ListItem key={league.id} disableGutters>
             <ListItemText primary={league.name} />
+            <Chip size="small" label={t(`company.gameMode.${league.game_mode}`)} />
           </ListItem>
         ))}
       </List>
@@ -133,7 +144,7 @@ function MembersList({ companyId }: { companyId: string }) {
   )
 }
 
-function SeasonForm({ companyId }: { companyId: string }) {
+function SeasonForm({ companyId, canManage }: { companyId: string; canManage: boolean }) {
   const { t } = useTranslation()
   const createSeason = useCreateSeason()
   const [open, setOpen] = useState(false)
@@ -150,9 +161,16 @@ function SeasonForm({ companyId }: { companyId: string }) {
 
   return (
     <Box>
-      <Button variant="outlined" size="small" onClick={() => setOpen(true)} sx={{ mb: 1 }}>
-        {t('company.addSeason')}
-      </Button>
+      {canManage && (
+        <Fab
+          color="secondary"
+          aria-label={t('company.addSeason')}
+          onClick={() => setOpen(true)}
+          sx={{ position: 'fixed', bottom: 24, right: 24 }}
+        >
+          <AddIcon />
+        </Fab>
+      )}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>{t('company.addSeason')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 320, pb: 3 }}>
@@ -168,29 +186,43 @@ function SeasonForm({ companyId }: { companyId: string }) {
   )
 }
 
-function LeagueForm({ companyId }: { companyId: string }) {
+function LeagueForm({ companyId, canManage }: { companyId: string; canManage: boolean }) {
   const { t } = useTranslation()
   const createLeague = useCreateLeague()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [gameMode, setGameMode] = useState<GameMode>('classic')
 
   const submit = () => {
     if (!name.trim()) return
     createLeague.mutate(
-      { companyId, name: name.trim() },
-      { onSuccess: () => { setOpen(false); setName('') } }
+      { companyId, name: name.trim(), gameMode },
+      { onSuccess: () => { setOpen(false); setName(''); setGameMode('classic') } }
     )
   }
 
   return (
     <Box>
-      <Button variant="outlined" size="small" onClick={() => setOpen(true)} sx={{ mb: 1 }}>
-        {t('company.addLeague')}
-      </Button>
+      {canManage && (
+        <Button variant="outlined" size="small" onClick={() => setOpen(true)} sx={{ mb: 1 }}>
+          {t('company.addLeague')}
+        </Button>
+      )}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>{t('company.addLeague')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 320, pb: 3 }}>
           <TextField label={t('company.leagueName')} value={name} onChange={(e) => setName(e.target.value)} fullWidth />
+          <TextField
+            select
+            label={t('company.gameModeLabel')}
+            value={gameMode}
+            onChange={(e) => setGameMode(e.target.value as GameMode)}
+            helperText={t('company.gameModeHint')}
+            fullWidth
+          >
+            <MenuItem value="classic">{t('company.gameMode.classic')}</MenuItem>
+            <MenuItem value="advanced">{t('company.gameMode.advanced')}</MenuItem>
+          </TextField>
           {createLeague.error && <Alert severity="error">{t('error.generic')}</Alert>}
           <Button variant="contained" onClick={submit} disabled={createLeague.isPending || !name.trim()}>
             {t('company.addLeague')}

@@ -111,6 +111,7 @@ describe('useCreateGame', () => {
           own_goal: false
         }
       ],
+      annotations: [],
       company_id: 'company-1',
       opponent_company_id: 'company-2',
       season_id: 'season-1',
