@@ -8,7 +8,6 @@ type UseAuthResult = {
   readonly user: User | null
   readonly loading: boolean
   readonly signInWithGoogle: () => Promise<void>
-  readonly signInWithEmail: (email: string, password: string) => Promise<void>
   readonly signOut: () => Promise<void>
 }
 
@@ -44,13 +43,6 @@ export function useAuth(): UseAuthResult {
     await supabase.auth.signInWithOAuth({ provider: 'google' })
   }, [])
 
-  const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      throw error
-    }
-  }, [])
-
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
   }, [])
@@ -60,7 +52,6 @@ export function useAuth(): UseAuthResult {
     user: session?.user ?? null,
     loading,
     signInWithGoogle,
-    signInWithEmail,
     signOut
   }
 }
