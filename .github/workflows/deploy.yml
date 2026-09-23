@@ -32,7 +32,7 @@ jobs:
       - name: Build with production Supabase env
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run build
 
       # Add VERCEL_ORG_ID, VERCEL_PROJECT_ID, and VERCEL_TOKEN in repo secrets.

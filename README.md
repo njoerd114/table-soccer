@@ -76,7 +76,7 @@ npm run preview        # serve production build
 CI runs on every push/PR. Deploy is **manual only**:
 
 1. Add repo secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`,
-   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
 2. GitHub → Actions → **Vercel Preview Deploy** → Run workflow
 
 ## Feedback

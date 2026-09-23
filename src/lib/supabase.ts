@@ -3,19 +3,20 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
 const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
-if (!url || !anonKey) {
+if (!url || !publishableKey) {
   // Fail loudly in dev — never silently degrade to anonymous access.
   throw new Error(
-    'Missing Supabase env: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local'
+    'Missing Supabase env: set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local'
   )
 }
 
 /**
  * Supabase client.
- * Security note: the anon key is public by design — all access control is
- * enforced server-side by Postgres RLS (see supabase/migrations/0002_rls.sql).
- * The app NEVER reads or writes PII (email/uid) into application tables.
+ * Security note: the publishable key (formerly "anon key") is public by
+ * design — all access control is enforced server-side by Postgres RLS
+ * (see supabase/migrations/0002_rls.sql). The app NEVER reads or writes
+ * PII (email/uid) into application tables.
  */
-export const supabase = createClient<Database>(url, anonKey)
+export const supabase = createClient<Database>(url, publishableKey)

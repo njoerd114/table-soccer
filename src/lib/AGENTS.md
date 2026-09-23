@@ -13,7 +13,7 @@ Client infrastructure: typed Supabase client, query-key factory, Slack payload b
 
 ## CONVENTIONS
 - Supabase client typed with the local `Database` schema (no generated types dependency)
-- Env guarded at module load: missing `VITE_SUPABASE_URL`/`ANON_KEY` → throw
+- Env guarded at module load: missing `VITE_SUPABASE_URL`/`PUBLISHABLE_KEY` → throw
 
 ## ANTI-PATTERNS
 - **`slack.ts` must NEVER emit emails, uids, or profile photo URLs** — this is the third-party PII boundary (covered by `src/security.test.ts`)
