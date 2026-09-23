@@ -405,6 +405,7 @@ export function transform(raw: TransformInput): AppData {
       startdate: new Date(gameRecord.startdate),
       duration: gameRecord.duration,
       timeline,
+      annotations: gameRecord.annotations ?? [],
       winnerScore:
         winnerAttackScore +
         winnerDefenseScore +

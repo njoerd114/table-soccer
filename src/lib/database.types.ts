@@ -1,4 +1,4 @@
-import type { TimelineEvent } from '../domain/types'
+import type { GameAnnotation, TimelineEvent } from '../domain/types'
 
 export type CompanyRow = {
   readonly id: string
@@ -62,6 +62,7 @@ export type LeagueRow = {
   readonly id: string
   readonly company_id: string
   readonly name: string
+  readonly game_mode: 'classic' | 'advanced'
   readonly created_by: string
   readonly created_at: string
 }
@@ -70,6 +71,7 @@ export type LeagueInsertRow = {
   readonly id?: string
   readonly company_id: string
   readonly name: string
+  readonly game_mode?: 'classic' | 'advanced'
   readonly created_by: string
   readonly created_at?: string
 }
@@ -101,6 +103,7 @@ export type GameRow = {
   readonly players: readonly string[]
   readonly scores: readonly number[]
   readonly timeline: readonly TimelineEvent[]
+  readonly annotations: readonly GameAnnotation[]
   readonly company_id: string | null
   readonly opponent_company_id: string | null
   readonly season_id: string | null
@@ -116,6 +119,7 @@ export type GameInsertRow = {
   readonly players: readonly string[]
   readonly scores: readonly number[]
   readonly timeline: readonly TimelineEvent[]
+  readonly annotations?: readonly GameAnnotation[]
   readonly company_id: string
   readonly opponent_company_id?: string | null
   readonly season_id?: string | null

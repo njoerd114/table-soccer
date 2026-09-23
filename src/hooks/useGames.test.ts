@@ -69,6 +69,7 @@ describe('useGames', () => {
             own_goal: false
           }
         ],
+        annotations: [],
         company_id: 'company-1',
         opponent_company_id: null,
         season_id: 'season-1',

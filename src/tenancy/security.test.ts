@@ -10,6 +10,7 @@ type MigrationName =
   | '0009_create_company_rpc.sql'
   | '0010_admin_tier_and_domain_autocreate.sql'
   | '0011_super_admin.sql'
+  | '0012_league_game_mode.sql'
 type TableName =
   | 'players'
   | 'games'
@@ -577,5 +578,44 @@ describe('Super admin: reserved, non-self-service, zero client access to the tab
       // Then: every broadened SELECT policy references is_super_admin() explicitly.
       expect(policyBlock).toMatch(/public\.is_super_admin\(\)/iu)
     }
+  })
+})
+
+describe('League game mode: immutable after creation, non-scoring annotations', () => {
+  it('defaults game_mode to classic and constrains it to the two known values', async () => {
+    // Given: the mode must be a deliberate opt-in, never accidentally advanced.
+    const sql = await readMigration('0012_league_game_mode.sql')
+
+    // Then: the column defaults to classic and is constrained to the two supported values.
+    expect(sql).toMatch(
+      /add\s+column\s+game_mode\s+text\s+not\s+null\s+default\s+'classic'/iu
+    )
+    expect(sql).toMatch(/check\s*\(\s*game_mode\s+in\s+\('classic',\s*'advanced'\)\s*\)/iu)
+  })
+
+  it('has no UPDATE policy on leagues, making game_mode immutable by construction', async () => {
+    // Given: immutability must hold across every migration, not just this one.
+    const allLeaguesRlsSql = [
+      await readMigration('0005_rls_tenancy.sql'),
+      await readMigration('0007_owner_only_season_league_writes.sql'),
+      await readMigration('0010_admin_tier_and_domain_autocreate.sql'),
+      await readMigration('0011_super_admin.sql')
+    ].join('\n')
+
+    // Then: no CREATE POLICY targets an UPDATE on public.leagues anywhere.
+    expect(allLeaguesRlsSql).not.toMatch(
+      /create\s+policy\s+\S+\s+on\s+public\.leagues\s+for\s+update/iu
+    )
+  })
+
+  it('keeps games.annotations a jsonb array, separate from the frozen timeline column', async () => {
+    // Given: annotations must never be readable as scoring data by the frozen domain layer.
+    const sql = await readMigration('0012_league_game_mode.sql')
+
+    // Then: annotations is its own jsonb array column, structurally isolated from timeline.
+    expect(sql).toMatch(
+      /add\s+column\s+annotations\s+jsonb\s+not\s+null\s+default\s+'\[\]'::jsonb/iu
+    )
+    expect(sql).toMatch(/check\s*\(\s*jsonb_typeof\(annotations\)\s*=\s*'array'\s*\)/iu)
   })
 })

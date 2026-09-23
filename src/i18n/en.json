@@ -1,0 +1,144 @@
+{
+  "app": {
+    "title": "Foosball.company",
+    "tagline": "Track your foosball games"
+  },
+  "nav": {
+    "games": "Games",
+    "teams": "Teams",
+    "players": "Players",
+    "seasons": "Seasons",
+    "admin": "Admin"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "signingIn": "Signing in…",
+    "loginRequired": "Please sign in to start a game",
+    "loginGoogle": "Sign in with Google"
+  },
+  "game": {
+    "new": "New game",
+    "selectPlayers": "Select players",
+    "active": "Game in progress",
+    "end": "End game",
+    "winner": "Winner",
+    "loser": "Loser",
+    "score": "Score",
+    "undo": "Undo goal",
+    "duration": "Duration",
+    "timeline": "Timeline",
+    "startNew": "Start new game",
+    "ownGoal": "Own goal",
+    "save": "Save game",
+    "role": {
+      "attack": "Attack",
+      "defense": "Defense"
+    },
+    "opponentCompany": "Opponent company",
+    "sameCompany": "Own company",
+    "handicapAllowance": "Handicap allowance: team {{team}} starts with +{{goals}} goals",
+    "ballOut": "Ball out",
+    "cornerBall": "Corner ball",
+    "hint": {
+      "serve": "Ball goes to team {{team}}",
+      "ballOut": "Team {{team}} puts the ball back in play",
+      "cornerBall": "Corner ball for team {{team}} – serve from the corner"
+    }
+  },
+  "position": {
+    "KEEPER": "Keeper",
+    "DEFENSE": "Defense",
+    "MIDFIELD": "Midfield",
+    "STRIKER": "Striker"
+  },
+  "stats": {
+    "elo": "ELO",
+    "games": "Games",
+    "wins": "Wins",
+    "losses": "Losses",
+    "winRatio": "Win ratio",
+    "winStreak": "Win streak",
+    "goals": "Goals",
+    "ownGoals": "Own goals",
+    "avgGoalsPosStriker": "Avg goals striker",
+    "avgGoalsPosMidfield": "Avg goals midfield",
+    "avgGoalsPosDefense": "Avg goals defense",
+    "avgGoalsPosKeeper": "Avg goals keeper",
+    "avgTimeBetweenGoals": "Avg time between goals",
+    "avgTimeBetweenGoalsAgainst": "Avg time between goals against",
+    "best": "Best player",
+    "compare": "Compare",
+    "metric": "Metric",
+    "value": "Value",
+    "profile": "Player profile",
+    "handicap": "HDCP"
+  },
+  "error": {
+    "generic": "Something went wrong",
+    "loadFailed": "Failed to load data"
+  },
+  "common": {
+    "loading": "Loading…",
+    "noData": "No data available",
+    "unknown": "Unknown",
+    "player": "Player",
+    "team": "Team",
+    "back": "Back",
+    "save": "Save"
+  },
+  "players": {
+    "unranked": "Not yet ranked"
+  },
+  "company": {
+    "onboarding": "Create company",
+    "onboardingText": "Create a company to track games. Your company has its own players, leaderboards, seasons, and leagues.",
+    "name": "Company name",
+    "create": "Create company",
+    "seasons": "Seasons",
+    "leagues": "Leagues",
+    "seasonName": "Season name",
+    "leagueName": "League name",
+    "startsOn": "Starts on",
+    "endsOn": "Ends on (optional)",
+    "addSeason": "Add season",
+    "addLeague": "Add league",
+    "rename": "Rename",
+    "members": "Members",
+    "promoteToAdmin": "Promote to admin",
+    "gameModeLabel": "Game mode",
+    "gameModeHint": "Cannot be changed after creation.",
+    "gameMode": {
+      "classic": "Classic",
+      "advanced": "Advanced"
+    },
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    }
+  },
+  "profile": {
+    "create": "Create player profile",
+    "displayName": "Display name"
+  },
+  "filter": {
+    "allSeasons": "All seasons",
+    "allLeagues": "All leagues"
+  },
+  "superAdmin": {
+    "title": "All companies",
+    "forbidden": "Access denied"
+  },
+  "landing": {
+    "heroTitle": "Track your foosball games",
+    "heroSubtitle": "Chess-style ELO ratings, live scoring, seasons, leagues, and leaderboards — for your whole company.",
+    "getStarted": "Get started",
+    "featureElo": "ELO ratings",
+    "featureEloText": "Chess-style ranking per player and per position.",
+    "featureLive": "Live scoring",
+    "featureLiveText": "Track goals in real time, position by position.",
+    "featureTeams": "Seasons & leagues",
+    "featureTeamsText": "Organize competitions across your whole company."
+  }
+}
