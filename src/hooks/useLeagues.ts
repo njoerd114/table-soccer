@@ -26,7 +26,7 @@ export function useLeagues(companyId: string) {
   return useQuery({
     queryKey: [...queryKeys.leagues, companyId],
     queryFn: () => fetchLeagues(companyId),
-    enabled: user !== null
+    enabled: user !== null && companyId !== ''
   })
 }
 

@@ -28,7 +28,7 @@ export function useSeasons(companyId: string) {
   return useQuery({
     queryKey: [...queryKeys.seasons, companyId],
     queryFn: () => fetchSeasons(companyId),
-    enabled: user !== null
+    enabled: user !== null && companyId !== ''
   })
 }
 
