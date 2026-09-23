@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Chip, CircularProgress, Grid, MenuItem, Paper, Switch, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Grid, MenuItem, Paper, Switch, TextField, Typography } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -491,15 +491,24 @@ function CreatePlayerProfile() {
   const { user } = useAuth()
   const { company } = useActiveCompany()
   const upsertProfile = useUpsertPlayerProfile()
+  const [allowPublicProfile, setAllowPublicProfile] = useState(false)
   const [displayName, setDisplayName] = useState(
     typeof user?.user_metadata.full_name === 'string' ? user.user_metadata.full_name : ''
   )
 
   const submit = () => {
     if (!displayName.trim()) return
+
+    const metadataAvatar = user?.user_metadata.avatar_url
+    const avatarUrl =
+      allowPublicProfile && typeof metadataAvatar === 'string'
+        ? metadataAvatar
+        : null
+
     upsertProfile.mutate({
       display_name: displayName.trim(),
-      avatar_url: null,
+      avatar_url: avatarUrl,
+      is_public: allowPublicProfile,
       company_id: company?.id ?? null
     })
   }
@@ -516,6 +525,16 @@ function CreatePlayerProfile() {
         fullWidth
         autoFocus
         sx={{ mb: 2 }}
+      />
+      <FormControlLabel
+        sx={{ mb: 2 }}
+        control={
+          <Checkbox
+            checked={allowPublicProfile}
+            onChange={(event) => setAllowPublicProfile(event.target.checked)}
+          />
+        }
+        label={t('profile.enablePublicProfileFromGoogleAvatar')}
       />
       {upsertProfile.error && <Alert severity="error" sx={{ mb: 2 }}>{t('error.generic')}</Alert>}
       <Button

@@ -1,4 +1,5 @@
-import { Alert, Avatar, Box, CircularProgress, Grid, Paper, Typography } from '@mui/material'
+import { Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Grid, Paper, Switch, Typography } from '@mui/material'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -8,13 +9,21 @@ import PlayerRadar from '../components/PlayerRadar'
 import { DEFAULT_ELO } from '../domain/constants'
 import { computePlayerHandicap } from '../domain/handicap'
 import { useActiveCompany } from '../hooks/useActiveCompany'
+import { useAuth } from '../hooks/useAuth'
 import { useGames } from '../hooks/useGames'
+import { usePlayers } from '../hooks/usePlayers'
+import { useUpsertPlayerProfile } from '../hooks/useUpsertPlayerProfile'
 
 export default function Player() {
   const { t } = useTranslation()
   const { id } = useParams()
+  const { user } = useAuth()
   const { company } = useActiveCompany()
   const { data, isLoading, error } = useGames(company ? { companyId: company.id } : undefined)
+  const { data: profiles } = usePlayers()
+  const upsertProfile = useUpsertPlayerProfile()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [publicProfileEnabled, setPublicProfileEnabled] = useState(false)
 
   if (isLoading) {
     return (
@@ -29,6 +38,8 @@ export default function Player() {
   }
 
   const player = data?.players.find((p) => p.id === id)
+  const profile = profiles?.find((entry) => entry.id === id)
+  const isOwnProfile = profile?.id === user?.id
 
   if (!player) {
     return <Alert severity="warning" sx={{ m: 2 }}>{t('common.noData')}</Alert>
@@ -75,6 +86,30 @@ export default function Player() {
 
   const handicap = computePlayerHandicap(player.id, data?.games ?? [])
 
+  const saveProfileSettings = () => {
+    if (!profile) {
+      return
+    }
+
+    const metadataAvatar = user?.user_metadata.avatar_url
+    const avatarUrl =
+      publicProfileEnabled && typeof metadataAvatar === 'string'
+        ? metadataAvatar
+        : null
+
+    upsertProfile.mutate(
+      {
+        display_name: profile.display_name,
+        avatar_url: avatarUrl,
+        is_public: publicProfileEnabled,
+        company_id: profile.company_id
+      },
+      {
+        onSuccess: () => setSettingsOpen(false)
+      }
+    )
+  }
+
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -90,6 +125,18 @@ export default function Player() {
           <Box sx={{ mt: 1 }}>
             <HandicapBadge handicap={handicap} />
           </Box>
+          {isOwnProfile && (
+            <Button
+              size="small"
+              sx={{ mt: 1 }}
+              onClick={() => {
+                setPublicProfileEnabled(profile?.is_public ?? false)
+                setSettingsOpen(true)
+              }}
+            >
+              {t('profile.settingsButton')}
+            </Button>
+          )}
         </div>
       </Box>
 
@@ -123,6 +170,52 @@ export default function Player() {
       )}
 
       {data && <PlayerRadar player={player} data={data} />}
+
+      <Dialog
+        open={settingsOpen && isOwnProfile}
+        onClose={() => {
+          setPublicProfileEnabled(profile?.is_public ?? false)
+          setSettingsOpen(false)
+        }}
+      >
+        <DialogTitle>{t('profile.settingsTitle')}</DialogTitle>
+        <DialogContent>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={publicProfileEnabled}
+                onChange={(event) => setPublicProfileEnabled(event.target.checked)}
+              />
+            }
+            label={t('profile.enablePublicProfileFromGoogleAvatar')}
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {t('profile.settingsHint')}
+          </Typography>
+          {upsertProfile.error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {t('error.generic')}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setPublicProfileEnabled(profile?.is_public ?? false)
+              setSettingsOpen(false)
+            }}
+          >
+            {t('common.back')}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={saveProfileSettings}
+            disabled={upsertProfile.isPending}
+          >
+            {t('common.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

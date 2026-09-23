@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Dialog, DialogContent, DialogTitle, MenuItem, TextField, Typography } from '@mui/material'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useActiveCompany } from '../hooks/useActiveCompany'
@@ -17,6 +17,14 @@ export default function CompanySwitcher() {
 
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+
+  // Fixes FAB/NewGame showing the onboarding dialog for users with existing companies.
+  useEffect(() => {
+    const first = companies?.[0]
+    if (!company && first) {
+      setCompany(first)
+    }
+  }, [company, companies, setCompany])
 
   const submit = () => {
     if (!name.trim()) return

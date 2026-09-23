@@ -2,12 +2,14 @@ import { lazy, Suspense, useState } from 'react'
 import { AppBar, Avatar, Box, Button, ButtonGroup, CircularProgress, Dialog, DialogContent, DialogTitle, Fab, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import CompanySwitcher from './components/CompanySwitcher'
 import LoginForm from './components/LoginForm'
 import { ActiveCompanyProvider } from './context/ActiveCompanyContext'
 import { useAuth } from './hooks/useAuth'
+import { useActiveCompany } from './hooks/useActiveCompany'
+import { useCompanyMembers } from './hooks/useCompanies'
 import { useGameSubscriptions } from './hooks/useGameSubscriptions'
 import { useIsSuperAdmin } from './hooks/useSuperAdmin'
 import { supportedLanguages } from './i18n'
@@ -21,6 +23,7 @@ const GameDetail = lazy(() => import('./pages/GameDetail'))
 const NewGame = lazy(() => import('./pages/NewGame'))
 const Comparinator = lazy(() => import('./pages/Comparinator'))
 const Seasons = lazy(() => import('./pages/Seasons'))
+const SeasonDetail = lazy(() => import('./pages/SeasonDetail'))
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'))
 
 const navLinkStyle = { color: 'inherit', textDecoration: 'none', marginRight: 16 } as const
@@ -65,6 +68,7 @@ export default function App() {
           <Route path="/new" element={<Suspense fallback={<PageLoader />}><NewGame /></Suspense>} />
           <Route path="/compare/:p1/:p2" element={<Suspense fallback={<PageLoader />}><Comparinator /></Suspense>} />
           <Route path="/seasons" element={<Suspense fallback={<PageLoader />}><Seasons /></Suspense>} />
+          <Route path="/seasons/:id" element={<Suspense fallback={<PageLoader />}><SeasonDetail /></Suspense>} />
           <Route path="/admin" element={<Suspense fallback={<PageLoader />}><SuperAdmin /></Suspense>} />
         </Routes>
 
@@ -78,6 +82,10 @@ function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const { data: isSuperAdmin } = useIsSuperAdmin()
+  const { company } = useActiveCompany()
+  const { data: members } = useCompanyMembers(company?.id ?? '')
+  const myRole = members?.find((m) => m.user_id === user?.id)?.role
+  const showAdminLink = isSuperAdmin || myRole === 'owner' || myRole === 'admin'
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [loginOpen, setLoginOpen] = useState(false)
 
@@ -105,7 +113,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink to="/seasons" style={navLinkStyle}>
             {t('nav.seasons')}
           </NavLink>
-          {isSuperAdmin && (
+          {showAdminLink && (
             <NavLink to="/admin" style={navLinkStyle}>
               {t('nav.admin')}
             </NavLink>
@@ -162,12 +170,16 @@ function LanguageSwitcher() {
   )
 }
 
+const GAMES_FAB_ROUTES = ['/', '/games']
+
 function NewGameFab() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
 
   if (!user) return null
+  if (!GAMES_FAB_ROUTES.includes(location.pathname)) return null
 
   return (
     <Fab
