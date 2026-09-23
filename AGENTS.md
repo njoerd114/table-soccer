@@ -107,7 +107,7 @@ npm run preview    # serve dist/
 ## NOTES
 - **Legacy reference** lives at `master` branch + `src/services/__mocks__/dataMock.json` fixture (golden test input in `src/test/fixtures/`)
 - Supabase migrations applied via `supabase link && supabase db push`; verify with `psql -f supabase/verify_security.sql`
-- Requires `.env.local` with `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (see `.env.example`)
+- Requires `.env.local` with `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` (see `.env.example`)
 - CI uses dummy VITE_* values; real values only in deploy secrets
 - Optional Slack posting needs `VITE_SLACK_WEBHOOK_URL` (best-effort, never crashes)
 - No server code; Vercel hosting via manual workflow_dispatch
