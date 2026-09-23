@@ -134,6 +134,11 @@
     "title": "Alle Firmen",
     "forbidden": "Kein Zugriff"
   },
+  "footer": {
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutz",
+    "license": "Lizenz: MIT + Commons Clause + Attribution"
+  },
   "landing": {
     "heroTitle": "Tischfußball Spiele tracken",
     "heroSubtitle": "Schach-Style ELO-Rating, Live-Scoring, Saisons, Ligen und Ranglisten – für deine ganze Firma.",
