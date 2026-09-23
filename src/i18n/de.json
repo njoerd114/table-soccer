@@ -14,11 +14,7 @@
     "logout": "Abmelden",
     "signingIn": "Anmeldung läuft…",
     "loginRequired": "Bitte anmelden, um ein Spiel zu starten",
-    "password": "Passwort",
-    "signIn": "Anmelden",
-    "or": "oder",
-    "loginGoogle": "Mit Google anmelden",
-    "hint": "Tipp: Für die lokale Version Demo / DemoPass123! verwenden."
+    "loginGoogle": "Mit Google anmelden"
   },
   "game": {
     "new": "Neues Spiel",
