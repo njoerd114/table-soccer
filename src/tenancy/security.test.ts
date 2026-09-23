@@ -7,6 +7,7 @@ type MigrationName =
   | '0005_rls_tenancy.sql'
   | '0007_owner_only_season_league_writes.sql'
   | '0008_google_account_auto_join.sql'
+  | '0009_create_company_rpc.sql'
 type TableName =
   | 'players'
   | 'games'
@@ -443,6 +444,39 @@ describe('Google account auto-join: no PII, no client access', () => {
     // Then: the trigger is wired to auth.users insert, not exposed as client RPC.
     expect(sql).toMatch(
       /create\s+trigger\s+on_auth_user_created_company_autojoin[\s\S]*?after\s+insert\s+on\s+auth\.users/iu
+    )
+  })
+})
+
+describe('Company creation RPC: atomic, definer-scoped, authenticated-only', () => {
+  it('creates both rows atomically via SECURITY DEFINER with a pinned search_path', async () => {
+    // Given: the RPC replaces a two-step client insert that could leave an orphaned company.
+    const sql = await readMigration('0009_create_company_rpc.sql')
+
+    // Then: the function is SECURITY DEFINER with search_path pinned to prevent hijacking.
+    expect(sql).toMatch(/security\s+definer[\s\S]*?set\s+search_path\s*=\s*public/iu)
+    // Then: both the company row and its owner membership are inserted in one function body.
+    expect(sql).toMatch(/insert\s+into\s+public\.companies/iu)
+    expect(sql).toMatch(/insert\s+into\s+public\.company_members[\s\S]*?'owner'/iu)
+    // Then: an unauthenticated caller (auth.uid() null) is rejected explicitly.
+    expect(sql).toMatch(/current_user_id\s+is\s+null[\s\S]*?raise\s+exception/iu)
+  })
+
+  it('grants execute only to authenticated, never anon or public', async () => {
+    // Given: this function must not become an anonymous write path into companies.
+    const sql = await readMigration('0009_create_company_rpc.sql')
+    const normalizedSql = sql.toLowerCase()
+
+    // Then: anon and public are explicitly revoked before the authenticated grant.
+    expect(normalizedSql).toMatch(
+      /revoke\s+all\s+on\s+function\s+public\.create_company\(text\)\s+from\s+public/u
+    )
+    expect(normalizedSql).toMatch(
+      /revoke\s+all\s+on\s+function\s+public\.create_company\(text\)\s+from\s+anon/u
+    )
+    // Then: only authenticated receives execute privilege.
+    expect(normalizedSql).toMatch(
+      /grant\s+execute\s+on\s+function\s+public\.create_company\(text\)\s+to\s+authenticated/u
     )
   })
 })
