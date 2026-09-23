@@ -1,0 +1,106 @@
+{
+  "app": {
+    "title": "Tischkicker Tracker",
+    "tagline": "Tischfußball Spiele tracken"
+  },
+  "nav": {
+    "games": "Spiele",
+    "teams": "Teams",
+    "players": "Spieler",
+    "seasons": "Saisons"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "signingIn": "Anmeldung läuft…",
+    "loginRequired": "Bitte anmelden, um ein Spiel zu starten",
+    "password": "Passwort",
+    "signIn": "Anmelden",
+    "or": "oder",
+    "loginGoogle": "Mit Google anmelden",
+    "hint": "Tipp: Für die lokale Version Demo / DemoPass123! verwenden."
+  },
+  "game": {
+    "new": "Neues Spiel",
+    "selectPlayers": "Spieler wählen",
+    "active": "Spiel läuft",
+    "end": "Spiel beenden",
+    "winner": "Sieger",
+    "loser": "Verlierer",
+    "score": "Ergebnis",
+    "undo": "Tor zurücknehmen",
+    "duration": "Dauer",
+    "timeline": "Verlauf",
+    "startNew": "Neues Spiel starten",
+    "ownGoal": "Eigentor",
+    "save": "Spiel speichern",
+    "role": {
+      "attack": "Angriff",
+      "defense": "Abwehr"
+    },
+    "opponentCompany": "Gegner-Firma",
+    "sameCompany": "Eigene Firma",
+    "handicapAllowance": "Handicap-Ausgleich: Team {{team}} startet mit +{{goals}} Toren"
+  },
+  "position": {
+    "KEEPER": "Torwart",
+    "DEFENSE": "Abwehr",
+    "MIDFIELD": "Mittelfeld",
+    "STRIKER": "Sturm"
+  },
+  "stats": {
+    "elo": "ELO",
+    "games": "Spiele",
+    "wins": "Siege",
+    "losses": "Niederlagen",
+    "winRatio": "Siegesquote",
+    "winStreak": "Siegessträhne",
+    "goals": "Tore",
+    "ownGoals": "Eigentore",
+    "avgGoalsPosStriker": "Ø Tore Sturm",
+    "avgGoalsPosMidfield": "Ø Tore Mittelfeld",
+    "avgGoalsPosDefense": "Ø Tore Abwehr",
+    "avgGoalsPosKeeper": "Ø Tore Torwart",
+    "avgTimeBetweenGoals": "Ø Zeit zwischen Toren",
+    "avgTimeBetweenGoalsAgainst": "Ø Zeit zwischen Gegentoren",
+    "best": "Bester Spieler",
+    "compare": "Vergleichen",
+    "metric": "Metrik",
+    "value": "Wert",
+    "profile": "Spielerprofil",
+    "handicap": "HDCP"
+  },
+  "error": {
+    "generic": "Etwas ist schiefgelaufen",
+    "loadFailed": "Daten konnten nicht geladen werden"
+  },
+  "common": {
+    "loading": "Lädt…",
+    "noData": "Keine Daten vorhanden",
+    "unknown": "Unbekannt",
+    "player": "Spieler",
+    "team": "Team",
+    "back": "Zurück"
+  },
+  "players": {
+    "unranked": "Noch nicht gewertet"
+  },
+  "company": {
+    "onboarding": "Firma erstellen",
+    "onboardingText": "Erstelle eine Firma, um Spiele zu tracken. Deine Firma hat eigene Spieler, Ranglisten, Saisons und Ligen.",
+    "name": "Firmenname",
+    "create": "Firma erstellen",
+    "seasons": "Saisons",
+    "leagues": "Ligen",
+    "seasonName": "Saisonname",
+    "leagueName": "Liganame",
+    "startsOn": "Beginn",
+    "endsOn": "Ende (optional)",
+    "addSeason": "Saison anlegen",
+    "addLeague": "Liga anlegen"
+  },
+  "filter": {
+    "allSeasons": "Alle Saisons",
+    "allLeagues": "Alle Ligen"
+  }
+}

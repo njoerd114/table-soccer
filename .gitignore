@@ -1,12 +1,33 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
 node_modules
+dist
+dist-ssr
+*.local
+
+# Environment — never commit Supabase keys or Slack webhooks
+.env
+.env.local
+.env.*.local
+
+# Supabase local
+supabase/.temp
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 .idea
-public/app.js
-public/app.js.map
-public/index.html
-public/fonts
-config.json
-config-dev.json
-.firebaserc
-.firebase
-yarn-error.log
-stats.json
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.omo/
