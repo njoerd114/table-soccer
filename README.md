@@ -1,155 +1,84 @@
-# React Table Soccer
-> Web app for tracking your table soccer games. Die Tischkicker / Tischfußball App.
+# Tischkicker Tracker
 
-![](assets/image6.png)
+> Tischfußball / Table Soccer Tracker — React 19 + Vite + Supabase PWA.
+> 2026 rebuild of the classic 2018 app, preserving the core ELO/game logic.
 
+## Stack
 
-![](assets/image2.png)
+- **React 19 + Vite 8 + TypeScript** (strict)
+- **Supabase** (Postgres + Row Level Security) — deny-by-default, no public read
+- **TanStack Query v5** — server state + realtime invalidation
+- **MUI v9** — dark-themed component library
+- **Recharts** — statistics charts
+- **vite-plugin-pwa** — installable, offline-capable
+- **i18next** — German UI
+- **GitHub Actions** — CI (lint, typecheck, tests, security tests, build) + manual Vercel preview deploy
 
-## Getting Started
+## Security model (why this rebuild is leak-proof)
 
-### Firebase setup
-Create a new project: https://console.firebase.google.com/. You need following firebase products:
+The 2018 app was taken down because its Firebase rules allowed **public read** of
+all data, leaking player emails, names, and profile photos.
 
-- Database: Enable the Firebase database and create following entries in the data tab:
+The rebuild enforces **deny-by-default at the database level**:
 
-```js
-{
-  data: {
-    players: [],
-    games: []
-  }
-} 
-```
-- You also need some database rules:
-```json
-{
-  "rules": {
-    "data": {
-      ".read": true,
-      "games": {
-      ".write": true
-      },
-      "players": {
-        ".write": true
-      }
-    }
-  }
-}
-```
-- Authentication: Enable the method `Google`.
+- Public tables contain **only** `display_name` and `avatar_url` — never email,
+  provider uid, or raw Google photo URLs. Identity lives exclusively in Supabase Auth.
+- Every table has **Row Level Security enabled** with minimal grants; anonymous
+  visitors can read nothing.
+- Security tests in CI (`npm run test:security`) assert these invariants
+  structurally — a future misconfiguration fails the build.
 
-- Enable Hosting in your firebase console.
+## Getting started
 
-### Project setup
-
-```sh
-git clone git@github.com:julienthoma/table-soccer.git
-```
-```sh
+```bash
 npm install
-```
-
-Create a `.firebaserc` file in your project root.
-```json
-{
-  "projects": {
-    "stage": "tablesoccer-dev"
-  }
-}
-```
-
-
-Create configs files for development and live environment and fill them with your firebase credentials. You can use the same config for development and production, but I would create an second firebase project for production.
-
-```sh
-cp config.dist.json config.json
-cp config.dist.json config-dev.json
-```
-```json
-{
-  "slackUrl": "Url for Slack webhook",
-  "firebaseConfig": {
-    "apiKey": "",
-    "authDomain": "",
-    "databaseURL": "",
-    "projectId": ""
-  },
-  "dbUrl": "firebase dbUrl e.g. <databaseURL>/data.json",
-  "slackBotUrl": "Url for slack bot"
-}
-```
-
-### Development
-To start the webpack dev server:
-```sh
+cp .env.example .env.local   # fill in Supabase URL + anon key
 npm run dev
 ```
 
-### Deployment
-```sh
-npm run prod
+Supabase migrations:
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push
 ```
 
-```sh
-firebase deploy
+Security verification (must all fail / return nothing for `anon`):
+
+```bash
+psql "$SUPABASE_DB_URL" -f supabase/verify_security.sql
 ```
 
-### Slack webhook
-Getting started: `https://api.slack.com/incoming-webhooks`.
-You will get game results posted in your favorite slack channel.
+## Commands
 
-### Slack Bot
-For creating games from Slack you need to setup another project: `https://github.com/ioiooi/kickerbot`.
+```bash
+npm run dev            # dev server (hot reload)
+npm run build          # production build → dist/
+npm run lint           # oxlint
+npm run typecheck      # tsc --noEmit
+npm test               # vitest run (domain + hooks)
+npm run test:security  # PII-leak regression tests
+npm run preview        # serve production build
+```
 
-## Feature Overview
+## Features
 
-### Creating Games
-- Google Login
-- 2on2 Mode
-- Time tracking
-- Tracking goals from all positions
-- Own goals
-- Undo feature
+- 2v2 games with live scoring, own goals, undo
+- Chess-style ELO rating (per player + per team)
+- Per-position statistics (Sturm / Mittelfeld / Abwehr / Torwart)
+- Game timeline, win streaks, leaderboards
+- Player comparison
+- Slack webhook posting (optional, display names only)
+- PWA: installable, works offline
 
+## Deployment
 
-![](assets/image1.png)
-### Game History
-- Timeline of games
-- Tracking of win streaks
-- MMR based on chess ELO-Rating
+CI runs on every push/PR. Deploy is **manual only**:
 
-
-![](assets/image2.png)
-
-### Statistics and metrics
-
-- MMR development
-- metrics for each position
-- Best player for each metric
-
-![](assets/image3.png)
-
-- Compare with other players
-
-![](assets/image5.png)
-
-### Slack Integration
-
-- Slack integration via web hook
-- Post your games live in any channel
-
-![](assets/image4.png)
-
-## Built With
-
-- React - <https://reactjs.org/>
-- Redux - <https://redux.js.org/>
-- Material UI - <https://material-ui.com/>
-- ChartJs - <https://www.chartjs.org/>
-- Webpack - <https://webpack.js.org/>
-- Firebase - <https://firebase.google.com/>
+1. Add repo secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`,
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+2. GitHub → Actions → **Vercel Preview Deploy** → Run workflow
 
 ## Feedback
 
-Feel free to report bugs or request new features on [Github](https://github.com/julienthoma/table-soccer/issues).
+Report bugs or request features via GitHub issues.

@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_ANON_KEY: dummy-ci-anon-key
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests with coverage
+        run: npm run test -- --coverage --coverage.reporter=json-summary --coverage.reporter=text
+
+      - name: Security tests
+        run: npm run test:security
+
+      - name: Add coverage summary
+        if: always()
+        run: |
+          node <<'EOF'
+          const fs = require('fs')
+          const summaryPath = 'coverage/coverage-summary.json'
+
+          if (!fs.existsSync(summaryPath)) {
+            fs.appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              '## Coverage\n\nCoverage summary was not generated.\n'
+            )
+            process.exit(0)
+          }
+
+          const coverage = JSON.parse(fs.readFileSync(summaryPath, 'utf8')).total
+          const rows = ['lines', 'statements', 'functions', 'branches']
+            .map((key) => `| ${key} | ${coverage[key].pct}% |`)
+            .join('\n')
+
+          fs.appendFileSync(
+            process.env.GITHUB_STEP_SUMMARY,
+            `## Coverage\n\n| Metric | Percent |\n| --- | ---: |\n${rows}\n`
+          )
+          EOF
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          if-no-files-found: ignore
+
+  pwa-audit:
+    name: pwa-audit
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Verify PWA build output
+        run: |
+          test -f dist/manifest.webmanifest
+          test -f dist/sw.js
+
+  summary:
+    name: summary
+    runs-on: ubuntu-latest
+    needs:
+      - quality
+      - pwa-audit
+    if: always()
+    steps:
+      - name: Gate required jobs
+        run: |
+          if [ "${{ needs.quality.result }}" != "success" ] || \
+             [ "${{ needs.pwa-audit.result }}" != "success" ]; then
+            echo "One or more required jobs failed." >&2
+            exit 1
+          fi
+
+          echo "All required CI jobs passed." >> "$GITHUB_STEP_SUMMARY"
