@@ -30,6 +30,7 @@ import { useGames } from '../hooks/useGames'
 import { useLeagues } from '../hooks/useLeagues'
 import { usePlayers } from '../hooks/usePlayers'
 import { useSeasons } from '../hooks/useSeasons'
+import { useUpsertPlayerProfile } from '../hooks/useUpsertPlayerProfile'
 import { queryKeys } from '../lib/queryKeys'
 import { createEndMessage } from '../lib/slack'
 
@@ -102,6 +103,12 @@ export default function NewGame() {
         <LoginForm />
       </Box>
     )
+  }
+
+  const myProfile = profiles?.find((p) => p.id === user.id)
+
+  if (!profilesLoading && !myProfile) {
+    return <CreatePlayerProfile />
   }
 
   const assignToSlot = (slotIndex: number) => (id: string) => {
@@ -436,5 +443,50 @@ function HandicapAllowance({ playerIds }: { playerIds: readonly (string | undefi
     <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
       {t('game.handicapAllowance', { team: teamGetsGoals, goals })}
     </Typography>
+  )
+}
+
+/** Prompts a signed-in user with no players row yet to set their public display name. */
+function CreatePlayerProfile() {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const { company } = useActiveCompany()
+  const upsertProfile = useUpsertPlayerProfile()
+  const [displayName, setDisplayName] = useState(
+    typeof user?.user_metadata.full_name === 'string' ? user.user_metadata.full_name : ''
+  )
+
+  const submit = () => {
+    if (!displayName.trim()) return
+    upsertProfile.mutate({
+      display_name: displayName.trim(),
+      avatar_url: null,
+      company_id: company?.id ?? null
+    })
+  }
+
+  return (
+    <Box sx={{ maxWidth: 480, mx: 'auto', p: 4 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        {t('profile.create')}
+      </Typography>
+      <TextField
+        label={t('profile.displayName')}
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        fullWidth
+        autoFocus
+        sx={{ mb: 2 }}
+      />
+      {upsertProfile.error && <Alert severity="error" sx={{ mb: 2 }}>{t('error.generic')}</Alert>}
+      <Button
+        variant="contained"
+        onClick={submit}
+        disabled={upsertProfile.isPending || !displayName.trim()}
+        fullWidth
+      >
+        {upsertProfile.isPending ? <CircularProgress size={20} /> : t('profile.create')}
+      </Button>
+    </Box>
   )
 }

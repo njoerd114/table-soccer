@@ -9,6 +9,7 @@ import LoginForm from './components/LoginForm'
 import { ActiveCompanyProvider } from './context/ActiveCompanyContext'
 import { useAuth } from './hooks/useAuth'
 import { useGameSubscriptions } from './hooks/useGameSubscriptions'
+import { useIsSuperAdmin } from './hooks/useSuperAdmin'
 
 const Games = lazy(() => import('./pages/Games'))
 const Teams = lazy(() => import('./pages/Teams'))
@@ -18,6 +19,7 @@ const GameDetail = lazy(() => import('./pages/GameDetail'))
 const NewGame = lazy(() => import('./pages/NewGame'))
 const Comparinator = lazy(() => import('./pages/Comparinator'))
 const Seasons = lazy(() => import('./pages/Seasons'))
+const SuperAdmin = lazy(() => import('./pages/SuperAdmin'))
 
 const navLinkStyle = { color: 'inherit', textDecoration: 'none', marginRight: 16 } as const
 
@@ -55,6 +57,7 @@ export default function App() {
           <Route path="/new" element={<Suspense fallback={<PageLoader />}><NewGame /></Suspense>} />
           <Route path="/compare/:p1/:p2" element={<Suspense fallback={<PageLoader />}><Comparinator /></Suspense>} />
           <Route path="/seasons" element={<Suspense fallback={<PageLoader />}><Seasons /></Suspense>} />
+          <Route path="/admin" element={<Suspense fallback={<PageLoader />}><SuperAdmin /></Suspense>} />
         </Routes>
 
         <NewGameFab />
@@ -66,6 +69,7 @@ export default function App() {
 function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   const { user, signOut } = useAuth()
+  const { data: isSuperAdmin } = useIsSuperAdmin()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [loginOpen, setLoginOpen] = useState(false)
 
@@ -93,6 +97,11 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink to="/seasons" style={navLinkStyle}>
             {t('nav.seasons')}
           </NavLink>
+          {isSuperAdmin && (
+            <NavLink to="/admin" style={navLinkStyle}>
+              {t('nav.admin')}
+            </NavLink>
+          )}
 
           {user ? (
             <>

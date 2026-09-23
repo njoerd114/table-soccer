@@ -8,6 +8,8 @@ type MigrationName =
   | '0007_owner_only_season_league_writes.sql'
   | '0008_google_account_auto_join.sql'
   | '0009_create_company_rpc.sql'
+  | '0010_admin_tier_and_domain_autocreate.sql'
+  | '0011_super_admin.sql'
 type TableName =
   | 'players'
   | 'games'
@@ -16,6 +18,7 @@ type TableName =
   | 'seasons'
   | 'leagues'
   | 'company_auth_allowlist'
+  | 'super_admins'
 
 const SQL_TABLE_CONSTRAINT_KEYWORDS = new Set([
   'constraint',
@@ -478,5 +481,101 @@ describe('Company creation RPC: atomic, definer-scoped, authenticated-only', () 
     expect(normalizedSql).toMatch(
       /grant\s+execute\s+on\s+function\s+public\.create_company\(text\)\s+to\s+authenticated/u
     )
+  })
+})
+
+describe('Admin tier: promotion cannot grant owner or touch the owner row', () => {
+  it('scopes company_members_update_admin to member/admin targets, never owner', async () => {
+    // Given: promotion must never be a path to hijacking or removing the original creator.
+    const sql = await readMigration('0010_admin_tier_and_domain_autocreate.sql')
+    const updatePolicy = extractPolicyBlock(sql, 'company_members_update_admin')
+
+    // Then: the acting user's own role is read via the recursion-safe SECURITY DEFINER helper.
+    expect(updatePolicy).toMatch(/public\.current_user_company_role\(company_id\)\s+in\s+\('owner',\s*'admin'\)/iu)
+    // Then: the target row's existing role must not already be 'owner'.
+    expect(updatePolicy).toMatch(/role\s*<>\s*'owner'/iu)
+    // Then: the with-check clause can only ever land on member or admin, never owner.
+    expect(updatePolicy).toMatch(/with\s+check\s*\(\s*role\s+in\s+\('member',\s*'admin'\)/iu)
+  })
+
+  it('broadens season/league/member-delete owner checks to include admin', async () => {
+    // Given: the auto-provisioned first-domain-user is 'admin', not 'owner'.
+    const sql = await readMigration('0010_admin_tier_and_domain_autocreate.sql')
+
+    // Then: seasons/leagues creation accepts either role.
+    expect(extractPolicyBlock(sql, 'seasons_insert')).toMatch(/role\s+in\s+\('owner',\s*'admin'\)/iu)
+    expect(extractPolicyBlock(sql, 'leagues_insert')).toMatch(/role\s+in\s+\('owner',\s*'admin'\)/iu)
+    // Then: member removal accepts either role too.
+    expect(extractPolicyBlock(sql, 'company_members_delete')).toMatch(/role\s+in\s+\('owner',\s*'admin'\)/iu)
+  })
+
+  it('auto-creates a company only when no allowlist row matches the signup domain at all', async () => {
+    // Given: this must never fire for a domain that already has any allowlist row.
+    const sql = await readMigration('0010_admin_tier_and_domain_autocreate.sql')
+
+    // Then: the fallback branch inserts a company, an 'admin' membership, and a new domain allowlist row.
+    expect(sql).toMatch(/insert\s+into\s+public\.companies[\s\S]*?new_company_id/iu)
+    expect(sql).toMatch(/insert\s+into\s+public\.company_members[\s\S]*?'admin'/iu)
+    expect(sql).toMatch(/insert\s+into\s+public\.company_auth_allowlist[\s\S]*?new_user_domain/iu)
+  })
+})
+
+describe('Super admin: reserved, non-self-service, zero client access to the table itself', () => {
+  it('keeps super_admins as a non-PII, zero-grant, forced-RLS table', async () => {
+    // Given: this table gates a platform-wide bypass and must never be client-reachable.
+    const sql = await readMigration('0011_super_admin.sql')
+    const normalizedSql = sql.toLowerCase()
+
+    // Then: the only columns are the user reference and creation metadata.
+    const columns = parseColumnNames(extractCreateTableBlock(sql, 'super_admins'))
+    expect(columns).toEqual(['user_id', 'created_at'])
+    // Then: anon and authenticated are both explicitly revoked.
+    expect(normalizedSql).toMatch(
+      /revoke\s+all\s+on\s+table\s+public\.super_admins\s+from\s+anon/u
+    )
+    expect(normalizedSql).toMatch(
+      /revoke\s+all\s+on\s+table\s+public\.super_admins\s+from\s+authenticated/u
+    )
+    expect(normalizedSql).toMatch(
+      /alter\s+table\s+public\.super_admins\s+enable\s+row\s+level\s+security/u
+    )
+    expect(normalizedSql).toMatch(
+      /alter\s+table\s+public\.super_admins\s+force\s+row\s+level\s+security/u
+    )
+    // Then: no GRANT statement targets this table for any client-facing role.
+    expect(stripLineComments(sql)).not.toMatch(
+      /grant\b[^;]*\bon\s+table\s+public\.super_admins/iu
+    )
+  })
+
+  it('exposes only a boolean check function to clients, never the table', async () => {
+    // Given: am_i_super_admin() is the only client-safe surface.
+    const sql = await readMigration('0011_super_admin.sql')
+    const normalizedSql = sql.toLowerCase()
+
+    // Then: is_super_admin() is SECURITY DEFINER so it can read the locked-down table.
+    expect(sql).toMatch(/is_super_admin[\s\S]*?security\s+definer/iu)
+    // Then: am_i_super_admin() is granted to authenticated as the client-facing wrapper.
+    expect(normalizedSql).toMatch(
+      /grant\s+execute\s+on\s+function\s+public\.am_i_super_admin\(\)\s+to\s+authenticated/u
+    )
+  })
+
+  it('bypasses every cross-company select policy only via is_super_admin()', async () => {
+    // Given: cross-company read access must route through the single checked helper.
+    const sql = await readMigration('0011_super_admin.sql')
+
+    for (const policyName of [
+      'companies_select_member',
+      'company_members_select',
+      'seasons_select',
+      'leagues_select',
+      'players_select_member',
+      'games_select_company'
+    ]) {
+      const policyBlock = extractPolicyBlock(sql, policyName)
+      // Then: every broadened SELECT policy references is_super_admin() explicitly.
+      expect(policyBlock).toMatch(/public\.is_super_admin\(\)/iu)
+    }
   })
 })

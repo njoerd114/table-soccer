@@ -16,7 +16,7 @@ export type CompanyInsertRow = {
 
 export type CompanyUpdateRow = Partial<CompanyInsertRow>
 
-export type CompanyMemberRole = 'owner' | 'member'
+export type CompanyMemberRole = 'owner' | 'admin' | 'member'
 
 export type CompanyMemberRow = {
   readonly id: string
@@ -174,6 +174,10 @@ export type Database = {
       readonly create_company: {
         readonly Args: { readonly company_name: string }
         readonly Returns: CompanyRow
+      }
+      readonly am_i_super_admin: {
+        readonly Args: Record<string, never>
+        readonly Returns: boolean
       }
     }
     readonly Enums: Record<string, never>

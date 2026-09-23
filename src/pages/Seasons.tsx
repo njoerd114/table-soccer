@@ -1,9 +1,13 @@
-import { Alert, Box, Button, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import type { CompanyMember } from '../domain/types'
 import { useActiveCompany } from '../hooks/useActiveCompany'
+import { useAuth } from '../hooks/useAuth'
+import { useCompanyMembers, useRenameCompany, useUpdateMemberRole } from '../hooks/useCompanies'
 import { useCreateLeague, useLeagues } from '../hooks/useLeagues'
+import { usePlayers } from '../hooks/usePlayers'
 import { useCreateSeason, useSeasons } from '../hooks/useSeasons'
 
 export default function Seasons() {
@@ -19,9 +23,7 @@ export default function Seasons() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        {company.name} — {t('company.seasons')} & {t('company.leagues')}
-      </Typography>
+      <CompanyHeader companyId={company.id} companyName={company.name} />
 
       <SeasonForm companyId={company.id} />
       <Box sx={{ mb: 3 }}>
@@ -48,6 +50,85 @@ export default function Seasons() {
       </List>
       {(leaguesLoading || seasonsLoading) && <Typography variant="body2" color="text.secondary">{t('common.loading')}</Typography>}
       {leaguesError && <Alert severity="error">{t('error.loadFailed')}</Alert>}
+
+      <MembersList companyId={company.id} />
+    </Box>
+  )
+}
+
+function CompanyHeader({ companyId, companyName }: { companyId: string; companyName: string }) {
+  const { t } = useTranslation()
+  const renameCompany = useRenameCompany()
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(companyName)
+
+  if (!editing) {
+    return (
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        {companyName} — {t('company.seasons')} & {t('company.leagues')}{' '}
+        <Button size="small" onClick={() => { setName(companyName); setEditing(true) }}>
+          {t('company.rename')}
+        </Button>
+      </Typography>
+    )
+  }
+
+  const submit = () => {
+    if (!name.trim()) return
+    renameCompany.mutate({ companyId, name: name.trim() }, { onSuccess: () => setEditing(false) })
+  }
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 2 }}>
+      <TextField size="small" value={name} onChange={(e) => setName(e.target.value)} />
+      <Button size="small" variant="contained" onClick={submit} disabled={renameCompany.isPending || !name.trim()}>
+        {t('common.save')}
+      </Button>
+      <Button size="small" onClick={() => setEditing(false)}>{t('common.back')}</Button>
+    </Box>
+  )
+}
+
+const ROLE_ORDER: Record<CompanyMember['role'], number> = { owner: 0, admin: 1, member: 2 }
+
+function MembersList({ companyId }: { companyId: string }) {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const { data: members, isLoading, error } = useCompanyMembers(companyId)
+  const { data: profiles } = usePlayers()
+  const updateRole = useUpdateMemberRole()
+
+  const myRole = members?.find((m) => m.user_id === user?.id)?.role
+  const canPromote = myRole === 'owner' || myRole === 'admin'
+
+  if (isLoading) return null
+  if (error) return <Alert severity="error">{t('error.loadFailed')}</Alert>
+
+  const sorted = [...(members ?? [])].sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role])
+
+  return (
+    <Box sx={{ mt: 4 }}>
+      <Typography variant="h6" sx={{ mb: 1 }}>{t('company.members')}</Typography>
+      <List dense>
+        {sorted.map((member) => {
+          const displayName = profiles?.find((p) => p.id === member.user_id)?.display_name ?? member.user_id
+          return (
+            <ListItem key={member.id} disableGutters>
+              <ListItemText primary={displayName} />
+              <Chip size="small" label={t(`company.role.${member.role}`)} sx={{ mr: 1 }} />
+              {canPromote && member.role === 'member' && (
+                <Button
+                  size="small"
+                  onClick={() => updateRole.mutate({ memberId: member.id, role: 'admin' })}
+                  disabled={updateRole.isPending}
+                >
+                  {t('company.promoteToAdmin')}
+                </Button>
+              )}
+            </ListItem>
+          )
+        })}
+      </List>
     </Box>
   )
 }

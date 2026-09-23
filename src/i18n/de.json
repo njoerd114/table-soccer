@@ -1,13 +1,14 @@
 {
   "app": {
-    "title": "Tischkicker Tracker",
+    "title": "Foosball.company",
     "tagline": "Tischfußball Spiele tracken"
   },
   "nav": {
     "games": "Spiele",
     "teams": "Teams",
     "players": "Spieler",
-    "seasons": "Saisons"
+    "seasons": "Saisons",
+    "admin": "Admin"
   },
   "auth": {
     "login": "Anmelden",
@@ -76,7 +77,8 @@
     "unknown": "Unbekannt",
     "player": "Spieler",
     "team": "Team",
-    "back": "Zurück"
+    "back": "Zurück",
+    "save": "Speichern"
   },
   "players": {
     "unranked": "Noch nicht gewertet"
@@ -93,10 +95,26 @@
     "startsOn": "Beginn",
     "endsOn": "Ende (optional)",
     "addSeason": "Saison anlegen",
-    "addLeague": "Liga anlegen"
+    "addLeague": "Liga anlegen",
+    "rename": "Umbenennen",
+    "members": "Mitglieder",
+    "promoteToAdmin": "Zum Admin befördern",
+    "role": {
+      "owner": "Inhaber",
+      "admin": "Admin",
+      "member": "Mitglied"
+    }
+  },
+  "profile": {
+    "create": "Spielerprofil erstellen",
+    "displayName": "Anzeigename"
   },
   "filter": {
     "allSeasons": "Alle Saisons",
     "allLeagues": "Alle Ligen"
+  },
+  "superAdmin": {
+    "title": "Alle Firmen",
+    "forbidden": "Kein Zugriff"
   }
 }
