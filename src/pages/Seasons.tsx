@@ -1,8 +1,8 @@
-import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, MenuItem, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { CompanyMember } from '../domain/types'
+import type { CompanyMember, GameMode } from '../domain/types'
 import { useActiveCompany } from '../hooks/useActiveCompany'
 import { useAuth } from '../hooks/useAuth'
 import { useCompanyMembers, useRenameCompany, useUpdateMemberRole } from '../hooks/useCompanies'
@@ -45,6 +45,7 @@ export default function Seasons() {
         {(leagues ?? []).map((league) => (
           <ListItem key={league.id} disableGutters>
             <ListItemText primary={league.name} />
+            <Chip size="small" label={t(`company.gameMode.${league.game_mode}`)} />
           </ListItem>
         ))}
       </List>
@@ -173,12 +174,13 @@ function LeagueForm({ companyId }: { companyId: string }) {
   const createLeague = useCreateLeague()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [gameMode, setGameMode] = useState<GameMode>('classic')
 
   const submit = () => {
     if (!name.trim()) return
     createLeague.mutate(
-      { companyId, name: name.trim() },
-      { onSuccess: () => { setOpen(false); setName('') } }
+      { companyId, name: name.trim(), gameMode },
+      { onSuccess: () => { setOpen(false); setName(''); setGameMode('classic') } }
     )
   }
 
@@ -191,6 +193,17 @@ function LeagueForm({ companyId }: { companyId: string }) {
         <DialogTitle>{t('company.addLeague')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 320, pb: 3 }}>
           <TextField label={t('company.leagueName')} value={name} onChange={(e) => setName(e.target.value)} fullWidth />
+          <TextField
+            select
+            label={t('company.gameModeLabel')}
+            value={gameMode}
+            onChange={(e) => setGameMode(e.target.value as GameMode)}
+            helperText={t('company.gameModeHint')}
+            fullWidth
+          >
+            <MenuItem value="classic">{t('company.gameMode.classic')}</MenuItem>
+            <MenuItem value="advanced">{t('company.gameMode.advanced')}</MenuItem>
+          </TextField>
           {createLeague.error && <Alert severity="error">{t('error.generic')}</Alert>}
           <Button variant="contained" onClick={submit} disabled={createLeague.isPending || !name.trim()}>
             {t('company.addLeague')}

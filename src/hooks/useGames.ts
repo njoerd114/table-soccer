@@ -99,6 +99,7 @@ function toGameRecord(row: GameRow): GameRecord {
     players: toPlayerTuple(row),
     scores: toScoreTuple(row),
     timeline: row.timeline.map((event) => ({ ...event })),
+    annotations: (row.annotations ?? []).map((annotation) => ({ ...annotation })),
     company_id: row.company_id,
     opponent_company_id: row.opponent_company_id,
     season_id: row.season_id,

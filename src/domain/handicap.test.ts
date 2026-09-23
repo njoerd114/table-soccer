@@ -13,6 +13,7 @@ function makeGame(
     startdate: new Date(2026, 0, order),
     duration: 300,
     timeline: [],
+    annotations: [],
     winnerScore: 5,
     loserScore: 3,
     winnerAttack: { id: 'a', name: 'A' },

@@ -45,13 +45,21 @@ export interface Season {
   created_by: string
 }
 
-/** A league (competition group) within a company. */
+/** A league (competition group) within a company. Game mode is fixed at creation. */
 export interface League {
   id: string
   company_id: string
   name: string
+  game_mode: GameMode
   created_by: string
 }
+
+/**
+ * League game mode, chosen once at league creation and never changed after.
+ * 'classic' = goals only (current default behavior).
+ * 'advanced' = classic, plus optional non-scoring dead-ball annotations.
+ */
+export type GameMode = 'classic' | 'advanced'
 
 /** A single goal/own-goal event in a game's timeline. */
 export interface TimelineEvent {
@@ -62,6 +70,20 @@ export interface TimelineEvent {
   /** Seconds elapsed since game start. */
   time: number
   own_goal: boolean
+}
+
+/**
+ * A non-scoring dead-ball event, only recorded in 'advanced' game mode.
+ * Never affects scores, ELO, or any derived PlayerStats field.
+ */
+export type GameAnnotationType = 'ball_out' | 'corner_ball'
+
+/** Which team a non-scoring annotation happened for (1 = slots 0/1, 2 = slots 2/3). */
+export interface GameAnnotation {
+  team: 1 | 2
+  type: GameAnnotationType
+  /** Seconds elapsed since game start. */
+  time: number
 }
 
 /** Persisted game record. */
@@ -79,6 +101,8 @@ export interface GameRecord {
    */
   scores: [number, number, number, number, number, number, number, number]
   timeline: TimelineEvent[]
+  /** Non-scoring dead-ball annotations; only ever non-empty in 'advanced' league game mode. */
+  annotations?: GameAnnotation[]
   /** Host company (tenant). */
   company_id: string | null
   /** Opponent company for cross-company matches; null = same company. */
@@ -201,6 +225,7 @@ export interface Game {
   startdate: Date
   duration: number
   timeline: TimelineEntry[]
+  annotations: GameAnnotation[]
   winnerScore: number
   loserScore: number
   winnerAttack: SimplePlayer

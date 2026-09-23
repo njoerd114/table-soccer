@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { League } from '../domain/types'
+import type { GameMode, League } from '../domain/types'
 import { queryKeys } from '../lib/queryKeys'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
@@ -8,6 +8,8 @@ import { useAuth } from './useAuth'
 export type CreateLeagueInput = {
   readonly companyId: string
   readonly name: string
+  /** Chosen once at creation; the league's game_mode can never be changed afterward. */
+  readonly gameMode?: GameMode
 }
 
 class MissingAuthenticatedUserError extends Error {
@@ -75,6 +77,7 @@ async function createLeague(input: CreateLeagueInput): Promise<void> {
   const { error } = await supabase.from('leagues').insert({
     company_id: input.companyId,
     name: input.name,
+    game_mode: input.gameMode ?? 'classic',
     created_by: user.id
   })
 

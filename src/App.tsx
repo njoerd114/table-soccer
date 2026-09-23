@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { AppBar, Avatar, Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, Fab, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
+import { AppBar, Avatar, Box, Button, ButtonGroup, CircularProgress, Dialog, DialogContent, DialogTitle, Fab, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
@@ -10,8 +10,10 @@ import { ActiveCompanyProvider } from './context/ActiveCompanyContext'
 import { useAuth } from './hooks/useAuth'
 import { useGameSubscriptions } from './hooks/useGameSubscriptions'
 import { useIsSuperAdmin } from './hooks/useSuperAdmin'
+import { supportedLanguages } from './i18n'
 
 const Games = lazy(() => import('./pages/Games'))
+const Landing = lazy(() => import('./pages/Landing'))
 const Teams = lazy(() => import('./pages/Teams'))
 const Players = lazy(() => import('./pages/Players'))
 const Player = lazy(() => import('./pages/Player'))
@@ -31,6 +33,12 @@ function PageLoader() {
   )
 }
 
+/** Landing page for signed-out visitors, Games list for signed-in users. */
+function Root() {
+  const { user } = useAuth()
+  return user ? <Games /> : <Landing />
+}
+
 export default function App() {
   const { loading } = useAuth()
 
@@ -48,7 +56,7 @@ export default function App() {
     <ActiveCompanyProvider>
       <AppShell>
         <Routes>
-          <Route path="/" element={<Suspense fallback={<PageLoader />}><Games /></Suspense>} />
+          <Route path="/" element={<Suspense fallback={<PageLoader />}><Root /></Suspense>} />
           <Route path="/games" element={<Suspense fallback={<PageLoader />}><Games /></Suspense>} />
           <Route path="/teams" element={<Suspense fallback={<PageLoader />}><Teams /></Suspense>} />
           <Route path="/players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
@@ -103,6 +111,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
             </NavLink>
           )}
 
+          <LanguageSwitcher />
+
           {user ? (
             <>
               <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
@@ -131,6 +141,24 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
       {children}
     </Box>
+  )
+}
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation()
+
+  return (
+    <ButtonGroup size="small" variant="outlined" color="inherit" sx={{ mr: 2 }}>
+      {supportedLanguages.map((lang) => (
+        <Button
+          key={lang}
+          onClick={() => void i18n.changeLanguage(lang)}
+          variant={i18n.resolvedLanguage === lang ? 'contained' : 'outlined'}
+        >
+          {lang.toUpperCase()}
+        </Button>
+      ))}
+    </ButtonGroup>
   )
 }
 
