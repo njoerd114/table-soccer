@@ -64,37 +64,12 @@ export function useCreateCompany() {
 }
 
 async function createCompany(input: CreateCompanyInput): Promise<Company> {
-  const {
-    data: { user },
-    error: authError
-  } = await supabase.auth.getUser()
-
-  if (authError) {
-    throw authError
-  }
-
-  if (!user) {
-    throw new MissingAuthenticatedUserError('create company')
-  }
-
-  const { data: company, error: companyError } = await supabase
-    .from('companies')
-    .insert({ name: input.name, created_by: user.id })
-    .select()
+  const { data: company, error } = await supabase
+    .rpc('create_company', { company_name: input.name })
     .single()
 
-  if (companyError) {
-    throw companyError
-  }
-
-  const { error: memberError } = await supabase.from('company_members').insert({
-    company_id: company.id,
-    user_id: user.id,
-    role: 'owner'
-  })
-
-  if (memberError) {
-    throw memberError
+  if (error) {
+    throw error
   }
 
   return company

@@ -170,7 +170,12 @@ export type Database = {
       }
     }
     readonly Views: Record<string, never>
-    readonly Functions: Record<string, never>
+    readonly Functions: {
+      readonly create_company: {
+        readonly Args: { readonly company_name: string }
+        readonly Returns: CompanyRow
+      }
+    }
     readonly Enums: Record<string, never>
     readonly CompositeTypes: Record<string, never>
   }

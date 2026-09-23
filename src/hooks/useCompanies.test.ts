@@ -7,15 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Company } from '../domain/types'
 import { useCompanies, useCreateCompany } from './useCompanies'
 
-type InsertCompanyTestRow = {
-  readonly name: string
-  readonly created_by: string
-}
-
-type InsertCompanyMemberTestRow = {
-  readonly company_id: string
-  readonly user_id: string
-  readonly role: 'owner'
+type CreateCompanyRpcArgs = {
+  readonly company_name: string
 }
 
 const supabaseMock = vi.hoisted(() => ({
@@ -24,7 +17,8 @@ const supabaseMock = vi.hoisted(() => ({
     onAuthStateChange: vi.fn(),
     getUser: vi.fn()
   },
-  from: vi.fn()
+  from: vi.fn(),
+  rpc: vi.fn()
 }))
 
 vi.mock('../lib/supabase', () => ({
@@ -55,6 +49,7 @@ describe('useCompanies', () => {
     })
     supabaseMock.auth.getUser.mockReset()
     supabaseMock.from.mockReset()
+    supabaseMock.rpc.mockReset()
   })
 
   it('returns Company rows when Supabase returns ordered companies', async () => {
@@ -83,39 +78,19 @@ describe('useCompanies', () => {
     expect(result.current.data).toEqual(rows)
   })
 
-  it('inserts companies then owner company_members row when creating a company', async () => {
+  it('calls the create_company RPC atomically instead of two separate inserts', async () => {
     const insertedCompany: Company = {
       id: 'company-1',
       name: 'Acme',
       created_by: 'auth-user-1',
       created_at: '2026-01-01T00:00:00Z'
     }
-    const insertOrder: string[] = []
-    const companiesSingle = vi.fn(async () => ({
-      data: insertedCompany,
-      error: null
+    const rpcSingle = vi.fn(async () => ({ data: insertedCompany, error: null }))
+    const rpcCall = vi.fn((_fn: string, _args: CreateCompanyRpcArgs) => ({
+      single: rpcSingle
     }))
-    const companiesSelect = vi.fn(() => ({ single: companiesSingle }))
-    const companiesInsert = vi.fn((_row: InsertCompanyTestRow) => {
-      insertOrder.push('companies')
-      return { select: companiesSelect }
-    })
-    const membersInsert = vi.fn(async (_row: InsertCompanyMemberTestRow) => {
-      insertOrder.push('company_members')
-      return { data: null, error: null }
-    })
 
-    supabaseMock.auth.getUser.mockResolvedValue({
-      data: { user: { id: 'auth-user-1' } },
-      error: null
-    })
-    supabaseMock.from.mockImplementation((table: string) => {
-      if (table === 'companies') {
-        return { insert: companiesInsert }
-      }
-
-      return { insert: membersInsert }
-    })
+    supabaseMock.rpc.mockImplementation(rpcCall)
 
     const { result } = renderHook(() => useCreateCompany(), {
       wrapper: createWrapper()
@@ -125,15 +100,10 @@ describe('useCompanies', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    expect(companiesInsert).toHaveBeenCalledWith({
-      name: 'Acme',
-      created_by: 'auth-user-1'
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('create_company', {
+      company_name: 'Acme'
     })
-    expect(membersInsert).toHaveBeenCalledWith({
-      company_id: 'company-1',
-      user_id: 'auth-user-1',
-      role: 'owner'
-    })
-    expect(insertOrder).toEqual(['companies', 'company_members'])
+    expect(rpcSingle).toHaveBeenCalled()
+    expect(result.current.data).toEqual(insertedCompany)
   })
 })
