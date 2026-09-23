@@ -13,6 +13,16 @@ export type JoinCompanyInput = {
   readonly companyId: string
 }
 
+export type UpdateMemberRoleInput = {
+  readonly memberId: string
+  readonly role: CompanyMember['role']
+}
+
+export type RenameCompanyInput = {
+  readonly companyId: string
+  readonly name: string
+}
+
 class MissingAuthenticatedUserError extends Error {
   constructor(action: 'create company' | 'join company') {
     super(`Cannot ${action} without an authenticated Supabase user`)
@@ -139,6 +149,57 @@ async function joinCompany(input: JoinCompanyInput): Promise<void> {
     user_id: user.id,
     role: 'member'
   })
+
+  if (error) {
+    throw error
+  }
+}
+
+/**
+ * Changes a member's role. RLS restricts this to an owner/admin acting on
+ * their own company (member/admin only), or a super admin acting on anyone.
+ */
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: updateMemberRole,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.companyMembers })
+    }
+  })
+}
+
+async function updateMemberRole(input: UpdateMemberRoleInput): Promise<void> {
+  const { error } = await supabase
+    .from('company_members')
+    .update({ role: input.role })
+    .eq('id', input.memberId)
+
+  if (error) {
+    throw error
+  }
+}
+
+/**
+ * Renames a company. RLS restricts this to the original creator or a super admin.
+ */
+export function useRenameCompany() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: renameCompany,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.companies })
+    }
+  })
+}
+
+async function renameCompany(input: RenameCompanyInput): Promise<void> {
+  const { error } = await supabase
+    .from('companies')
+    .update({ name: input.name })
+    .eq('id', input.companyId)
 
   if (error) {
     throw error

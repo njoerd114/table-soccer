@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Tischkicker Tracker',
-        short_name: 'Tischkicker',
+        name: 'Foosball.company',
+        short_name: 'Foosball',
         description: 'Tischfußball Spiele tracken, ELO-Rating, Statistiken',
         theme_color: '#00bcd4',
         background_color: '#121212',

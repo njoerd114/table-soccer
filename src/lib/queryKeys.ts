@@ -8,5 +8,6 @@ export const queryKeys = {
   companyMembers: ['company-members'],
   seasons: ['seasons'],
   leagues: ['leagues'],
+  isSuperAdmin: ['is-super-admin'],
   playerDetail: (id: string) => ['players', 'detail', id]
 } as const
