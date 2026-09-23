@@ -1,7 +1,12 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 
-type MigrationName = '0002_rls.sql' | '0004_tenancy.sql' | '0005_rls_tenancy.sql'
+type MigrationName =
+  | '0002_rls.sql'
+  | '0004_tenancy.sql'
+  | '0005_rls_tenancy.sql'
+  | '0007_owner_only_season_league_writes.sql'
+  | '0008_google_account_auto_join.sql'
 type TableName =
   | 'players'
   | 'games'
@@ -9,6 +14,7 @@ type TableName =
   | 'company_members'
   | 'seasons'
   | 'leagues'
+  | 'company_auth_allowlist'
 
 const SQL_TABLE_CONSTRAINT_KEYWORDS = new Set([
   'constraint',
@@ -335,5 +341,108 @@ describe('Tenancy: anon gets nothing', () => {
     expect(matchesTableAnonRevoke(normalizedSql, 'seasons')).toBe(true)
     // Then: anon has no direct privilege to league rows.
     expect(matchesTableAnonRevoke(normalizedSql, 'leagues')).toBe(true)
+  })
+})
+
+describe('Owner-only season/league writes', () => {
+  it('restricts season creation to company owners', async () => {
+    // Given: only owners should curate a company's competitive structure.
+    const sql = await readMigration('0007_owner_only_season_league_writes.sql')
+
+    // When: the seasons_insert policy is inspected directly.
+    const seasonsInsertPolicy = extractPolicyBlock(sql, 'seasons_insert')
+
+    // Then: the policy requires an owner-role membership row.
+    expect(seasonsInsertPolicy).toMatch(/role\s*=\s*'owner'/iu)
+    // Then: the prior member-level policy is dropped before replacement.
+    expect(sql).toMatch(/drop\s+policy\s+if\s+exists\s+seasons_insert\s+on\s+public\.seasons/iu)
+  })
+
+  it('restricts league creation to company owners', async () => {
+    // Given: only owners should curate a company's competitive structure.
+    const sql = await readMigration('0007_owner_only_season_league_writes.sql')
+
+    // When: the leagues_insert policy is inspected directly.
+    const leaguesInsertPolicy = extractPolicyBlock(sql, 'leagues_insert')
+
+    // Then: the policy requires an owner-role membership row.
+    expect(leaguesInsertPolicy).toMatch(/role\s*=\s*'owner'/iu)
+    // Then: the prior member-level policy is dropped before replacement.
+    expect(sql).toMatch(/drop\s+policy\s+if\s+exists\s+leagues_insert\s+on\s+public\.leagues/iu)
+  })
+})
+
+describe('Google account auto-join: no PII, no client access', () => {
+  it('keeps the allowlist table limited to non-PII columns', async () => {
+    // Given: even a server-only table must not persist plaintext email.
+    const sql = await readMigration('0008_google_account_auto_join.sql')
+
+    // When: the allowlist create-table body is parsed structurally.
+    const columns = parseColumnNames(
+      extractCreateTableBlock(sql, 'company_auth_allowlist')
+    )
+
+    // Then: only hashed identity, salt, domain, and tenant/timestamp metadata exist.
+    expect(columns).toEqual([
+      'id',
+      'company_id',
+      'identity_hash',
+      'identity_salt',
+      'signup_domain',
+      'created_at'
+    ])
+    // Then: no column name reintroduces a plaintext email/uid/phone/photo field.
+    expect(columns.join(',')).not.toMatch(PII_COLUMN_NAME)
+  })
+
+  it('never persists a plaintext email literal in the migration body', async () => {
+    // Given: the trigger/helper functions must hash email before storing it.
+    const sql = await readMigration('0008_google_account_auto_join.sql')
+
+    // When: insert/values statements targeting the allowlist table are inspected.
+    const allowlistInsertMatch = sql.match(
+      /insert\s+into\s+public\.company_auth_allowlist[\s\S]*?;/iu
+    )
+
+    // Then: the insert statement exists and stores digest()/encode() output, not raw email.
+    const valuesClause = allowlistInsertMatch?.[0].match(/values\s*\(([\s\S]*?)\)\s*returning/iu)?.[1]
+    expect(valuesClause).toMatch(/digest\(/iu)
+    // Then: target_email is only ever passed through digest(), never bound directly as a column value.
+    expect(valuesClause).not.toMatch(/(^|,)\s*target_email\s*(,|$)/mu)
+  })
+
+  it('denies all client grants on the allowlist table', async () => {
+    // Given: this table must never be reachable from the browser, even for owners.
+    const sql = await readMigration('0008_google_account_auto_join.sql')
+    const normalizedSql = sql.toLowerCase()
+
+    // Then: anon and authenticated are both explicitly revoked.
+    expect(matchesTableAnonRevoke(normalizedSql, 'company_auth_allowlist')).toBe(true)
+    expect(normalizedSql).toMatch(
+      /revoke\s+all\s+on\s+table\s+public\.company_auth_allowlist\s+from\s+authenticated/u
+    )
+    // Then: no GRANT statement targets this table for any client-facing role.
+    expect(stripLineComments(sql)).not.toMatch(
+      /grant\b[^;]*\bon\s+table\s+public\.company_auth_allowlist/iu
+    )
+    // Then: RLS is enabled and forced as defense-in-depth beyond the revokes.
+    expect(normalizedSql).toMatch(
+      /alter\s+table\s+public\.company_auth_allowlist\s+enable\s+row\s+level\s+security/u
+    )
+    expect(normalizedSql).toMatch(
+      /alter\s+table\s+public\.company_auth_allowlist\s+force\s+row\s+level\s+security/u
+    )
+  })
+
+  it('auto-joins only on a matched allowlist row via SECURITY DEFINER', async () => {
+    // Given: the trigger must run with elevated privilege to bypass RLS safely.
+    const sql = await readMigration('0008_google_account_auto_join.sql')
+
+    // Then: the trigger function is SECURITY DEFINER with a pinned search_path.
+    expect(sql).toMatch(/security\s+definer[\s\S]*?set\s+search_path\s*=\s*public/iu)
+    // Then: the trigger is wired to auth.users insert, not exposed as client RPC.
+    expect(sql).toMatch(
+      /create\s+trigger\s+on_auth_user_created_company_autojoin[\s\S]*?after\s+insert\s+on\s+auth\.users/iu
+    )
   })
 })
