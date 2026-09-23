@@ -116,5 +116,10 @@
   "superAdmin": {
     "title": "Alle Firmen",
     "forbidden": "Kein Zugriff"
+  },
+  "footer": {
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutz",
+    "license": "Lizenz: MIT + Commons Clause + Attribution"
   }
 }

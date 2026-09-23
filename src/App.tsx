@@ -20,6 +20,8 @@ const NewGame = lazy(() => import('./pages/NewGame'))
 const Comparinator = lazy(() => import('./pages/Comparinator'))
 const Seasons = lazy(() => import('./pages/Seasons'))
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'))
+const Impressum = lazy(() => import('./pages/Impressum'))
+const Datenschutz = lazy(() => import('./pages/Datenschutz'))
 
 const navLinkStyle = { color: 'inherit', textDecoration: 'none', marginRight: 16 } as const
 
@@ -58,6 +60,8 @@ export default function App() {
           <Route path="/compare/:p1/:p2" element={<Suspense fallback={<PageLoader />}><Comparinator /></Suspense>} />
           <Route path="/seasons" element={<Suspense fallback={<PageLoader />}><Seasons /></Suspense>} />
           <Route path="/admin" element={<Suspense fallback={<PageLoader />}><SuperAdmin /></Suspense>} />
+          <Route path="/impressum" element={<Suspense fallback={<PageLoader />}><Impressum /></Suspense>} />
+          <Route path="/datenschutz" element={<Suspense fallback={<PageLoader />}><Datenschutz /></Suspense>} />
         </Routes>
 
         <NewGameFab />
@@ -130,6 +134,40 @@ function AppShell({ children }: { children: React.ReactNode }) {
       </Dialog>
 
       {children}
+
+      <Footer />
+    </Box>
+  )
+}
+
+function Footer() {
+  const { t } = useTranslation()
+
+  return (
+    <Box
+      component="footer"
+      sx={{
+        mt: 6,
+        py: 2,
+        px: 2,
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: 0.7,
+        fontSize: '0.875rem',
+      }}
+    >
+      <Link to="/impressum" style={{ color: 'inherit' }}>
+        {t('footer.impressum')}
+      </Link>
+      <Link to="/datenschutz" style={{ color: 'inherit' }}>
+        {t('footer.datenschutz')}
+      </Link>
+      <Typography variant="caption" component="span">
+        {t('footer.license')}
+      </Typography>
     </Box>
   )
 }

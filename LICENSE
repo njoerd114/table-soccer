@@ -1,0 +1,100 @@
+MIT License with Commons Clause + Attribution Requirement
+
+Copyright (c) 2026 Niklas Beinghaus and Julien Thoma
+
+## Commons Clause Restriction
+
+The Software is provided to you by the Licensor under the
+License, as defined below, subject to the following condition.
+
+Without limiting other conditions in the License, the grant of
+rights under the License will not include, and the License does
+not grant to you, the right to Sell the Software.
+
+For purposes of the foregoing, "Sell" means practicing any or
+all of the rights granted to you under the License to provide
+to third parties, for a fee or other consideration (including
+without limitation fees for hosting or consulting/support
+services related to the Software), a product or service whose
+value derives, entirely or substantially, from the functionality
+of the Software. Any license notice or attribution required by
+the License must also include this Commons Clause License
+Condition notice.
+
+## Donation Carve-Out
+
+Notwithstanding the Commons Clause Restriction above, **any
+licensee** — including the original Licensor, third parties,
+forks, and anyone else who is running an instance of the
+Software or a derivative work under this License — may solicit
+and accept **voluntary donations** to cover the actual operating
+costs of that instance (such as hosting, infrastructure, and
+maintenance), provided that:
+
+- the donation is voluntary and not a required fee, paywall, or
+  condition to access or use the instance;
+- the amount collected is used to cover operating costs of
+  running the Software, not to monetize the Software's
+  functionality itself or generate profit from it; and
+- access to the instance and its features is not gated behind
+  payment.
+
+This carve-out is not limited to the original Licensor and
+applies equally to any other person or organization operating
+their own instance of the Software or a derivative work,
+provided the Additional Attribution Requirement below is
+observed.
+
+Such voluntary donations for operating costs do not constitute
+"Selling" the Software within the meaning of the Commons Clause
+Restriction.
+
+## License (MIT)
+
+Subject to the Commons Clause Restriction above, permission is
+hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify,
+merge, publish, distribute, and/or sublicense copies of the
+Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice, this permission notice, the Commons
+Clause Restriction, and the Additional Attribution Requirement
+below shall be included in all copies or substantial portions of
+the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+## Additional Attribution Requirement
+
+In addition to the terms above, any use, redistribution, fork,
+or derivative work of the Software must retain visible
+attribution to the original author and project:
+
+> This project is based on / derived from work originally
+> created by Julien Thoma ("the original table-soccer
+> project"). Attribution must be preserved in redistributed
+> copies, forks, and derivative works, including a visible
+> credit in the documentation, an "About" page, or the
+> application footer.
+
+This requirement applies regardless of the extent of
+modification and survives any subsequent redistribution.
+
+---
+
+Note on third-party dependencies: this Commons Clause + MIT
+license applies only to the original code of this project. All
+third-party dependencies (React, MUI, Supabase client libraries,
+Vite, etc.) remain under their own respective licenses (mostly
+MIT/Apache-2.0), which permit both commercial and noncommercial
+use and are unaffected by the restriction above.
